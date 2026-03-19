@@ -1,0 +1,26 @@
+# OCR
+paddlepaddle
+paddleocr #This is used for OCR,
+
+#Tesseract OCR
+# https://github.com/UB-Mannheim/tesseract/wiki#tesseract-installer-for-windows # Tesseract OCR Mannheim
+# ADD to Path C:\Program Files\Tesseract-OCR\tesseract.exe
+pytesseract # This is used for OCR, it is a wrapper for Tesseract OCR
+
+# Mistral.AI
+# https://console.mistral.ai/upgrade/plans
+
+fastapi 
+uvicorn[standard] 
+python-multipart 
+jinja2 
+pydantic[email]
+httpx 
+pillow 
+mistralai
+python-dotenv
+loguru
+tenacity
+apscheduler
+sqlalchemy
+
