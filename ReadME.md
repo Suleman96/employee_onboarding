@@ -88,8 +88,8 @@ This project is being built with a practical stack that is highly relevant for m
 - **structured data validation and review workflows**
 
 ## Project structure
-
 A simple project structure at this stage may look like this:
+
 
 ```text
 employee_onboarding/
