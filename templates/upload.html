@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Employee</title>
+</head>
+<body>
+    <h1>Create New Employee</h1>
+
+    <form action="/employees/new" method="post">
+        <label>First Name:</label><br>
+        <input type="text" name="first_name"><br><br>
+
+        <label>Last Name:</label><br>
+        <input type="text" name="last_name"><br><br>
+
+        <label>Date of Birth:</label><br>
+        <input type="text" name="date_of_birth" placeholder="DD.MM.YYYY"><br><br>
+
+        <label>Place of Birth:</label><br>
+        <input type="text" name="place_of_birth"><br><br>
+
+        <label>Phone:</label><br>
+        <input type="text" name="phone"><br><br>
+
+        <label>Email:</label><br>
+        <input type="email" name="email"><br><br>
+
+        <label>Street and Number:</label><br>
+        <input type="text" name="street_and_number"><br><br>
+
+        <label>ZIP Code:</label><br>
+        <input type="text" name="zip_code"><br><br>
+
+        <label>City:</label><br>
+        <input type="text" name="city"><br><br>
+
+        <label>Country of stay:</label><br>
+        <input type="text" name="country" value="Deutschland"><br><br>
+
+        <label>Gender:</label><br>
+        <select name="gender">
+            <option value="">--Choose--</option>
+            <option value="male">male</option>
+            <option value="female">female</option>
+        </select><br><br>
+
+        <label>Date of Birth:</label><br>
+        <input type="date" name="date_of_birth"><br><br>
+
+        <label>Country of Birth:</label><br>
+        <input type="text" name="country_of_birth"><br><br>
+
+        <label>Nationality:</label><br>
+        <input type="text" name="nationality"><br><br>
+
+        <label>Steuer ID:</label><br>
+        <input type="text" name="steuer_id"><br><br>
+
+        <label>Steuerklasse:</label><br>
+        <input type="number" name="steuerklasse" min= "1" max= "6"><br><br>
+
+
+        <label>IBAN:</label><br>
+        <input type="text" name="iban"><br><br>
+
+        <label>Start Date:</label><br>
+        <input type="date" name="start_date"><br><br>
+
+        <label>Contract Type:</label><br>
+        <input type="text" name="contract_type" list="contract-types"><br><br>
+        <datalist id="contract-types">
+            <option value="permanent">
+            <option value="temporary">
+        </datalist>
+
+        <label>End Date:</label><br>
+        <input type="date" name="end_date"><br><br>
+
+        <label>Disabled:</label><br>
+        <input type="text" name="disabled" list="disabled-options"><br><br>
+        <datalist id="disabled-options">
+            <option value="true">
+            <option value="false">
+        </datalist>
+
+        <button type="submit">Save Employee</button>
+    </form>
+</body>
+</html>
