@@ -3,12 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Onboarding</title>
+    <title>Employee Onboarding Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f7f9fc; margin: 0; padding: 20px; }
+        h1 { color: #1f3c88; }
+        .top-bar{display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;}
+        .btn { background-color: #1f3c88; color: white; padding: 10px 16px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .btn:hover {background-color: #16306d;}
+        .stats {margin-bottom: 20px; padding: 15px; background: white;border-radius: 8px;box-shadow: 0 1px 4px rgba(0,0,0,0.08);}
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 4px rgba(0,0,0,0.08);}
+        th, td {padding: 12px; border-bottom: 1px solid #ddd;text-align: left;}
+        th {background-color: #eaf0fb;color: #1f3c88;}
+        tr:hover {background-color: #f1f5ff;}
+        .badge {padding: 4px 10px; border-radius: 12px; font-size: 13px;font-weight: bold;display: inline-block; }
+        .draft {background-color: #dbeafe;color: #1d4ed8;}
+        .under_review {background-color: #fef3c7;color: #b45309;}
+        .approved {background-color: #dcfce7;color: #15803d;}
+        .not-found {margin-top: 20px;padding: 20px;background: white;border-radius: 8px;color: #666;}
+        a.row-link {color: #1f3c88;text-decoration: none; font-weight: bold;}
+        a.row-link:hover {text-decoration: underline;}
+    </style>
 </head>
-<body>
-    <h1>Employee Onboarding System</h1>
-    <p>Welcome to the dashboard.</p>
 
-    <a href= "/upload"> Create New Employee</a>
-</body>
+<body>
+    <div class="top-bar"> 
+        <h1>Employee Onboarding Dashboard</h1>
+        <a href="/upload" class="btn">Create New Employee</a>
+    </div>
+    <div class="stats">
+        <strong>Total Employees:</strong> {{ employees|length }}
+    </div>
+
+    {% if employees %}
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>City</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{employee.id}}</td>
+                <td>{{employee.first_name or ''}} {{employee.last_name or ''}}</td>
+                <td>{{employee.city or ''}}</td>
+                <td>{{employee.email or ''}}</td>
+                <td>
+                    <span class= "badge {{employee.status}}">
+                        {{ employee.status or 'draft' }}
+                    </span> 
+                </td>
+                <td>{{employee.created_at}}</td>
+                <td> 
+                    <a class= "row-link" href= /review/{{ employee.id }}>Review</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="not-found">
+        No employees found. Click <strong>"Create New Employee"</strong> to add your first employee.
+    </div>
+    {% endif %}
+    </body>
 </html>
+

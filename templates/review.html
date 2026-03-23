@@ -5,9 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Employee Data</title>
     <style>
-        .highlight { font-weight: bold; color: #2c3e50; }
-        .section { margin: 20px 0; padding: 10px; border-left: 4px solid #3498db; background-color: #f8f9fa; }
-        .section h3 { margin-top: 0; color: #3498db; }
+        body {font-family: Arial, sans-serif;margin: 30px;background-color: #f7f9fc;}
+        h1 {color: #1f3c88;}
+        .section {margin: 20px 0;padding: 15px;border-left: 4px solid #3498db;background-color: white;border-radius: 6px;box-shadow: 0 1px 4px rgba(0,0,0,0.08);}
+        .section h3 {margin-top: 0;color: #3498db;}
+        .actions {margin-top: 25px;}
+        .btn {display: inline-block;padding: 10px 16px;text-decoration: none;border-radius: 6px;font-weight: bold;margin-right: 10px;}
+        .btn-primary {background-color: #1f3c88;color: white;}
+        .btn-primary:hover {background-color: #16306d;}
+        .btn-secondary {background-color: #e5e7eb;color: #111827;}
+        .btn-secondary:hover {background-color: #d1d5db;}
+        p {margin: 8px 0;}strong {color: #2c3e50;}
     </style>
 </head>
 <body>
@@ -18,111 +26,69 @@
     <div class="section">
         <h3>Basic Information</h3>
         <p><strong>ID:</strong> {{ employee.id }}</p>
-        <label> First Name: </label><br>
-        <input type="text" name="first_name" value="{{ employee.first_name or '' }}"><br><br>
-
-        <label> Last Name: </label><br>
-        <input type="text" name="last_name" value="{{ employee.last_name or '' }}"><br><br>
-        <label> Gender: </label><br>
-        <input type="text" name="gender" value="{{ employee.gender or '' }}"><br><br>
-
-        <label>Date of Birth:</label><br>
-        <input type="date" name="date_of_birth" value="{{ employee.date_of_birth or '' }}"><br><br>
-
+        <p><strong>First Name:</strong> {{ employee.first_name or '' }}</p>
+        <p><strong>Last Name:</strong> {{ employee.last_name or '' }}</p>
+        <p><strong>Gender:</strong>  {{ employee.gender or '' }}</p>
+        <p><strong>Date of Birth:</strong> {{ employee.date_of_birth or '' }}</p>
+               
     </div>
 
     <div class="section">
         <h3>Birth & Origin</h3>
-        <label>Place of Birth:</label><br>
-        <input type="text" name="place_of_birth" value="{{ employee.place_of_birth or '' }}"><br><br>
-
-        <label>Country of Birth:</label><br>
-        <input type="text" name="country_of_birth" value="{{ employee.country_of_birth or '' }}"><br><br>
-
-        <label>Nationality:</label><br>
-        <input type="text" name="nationality" value="{{ employee.nationality or '' }}"><br><br>
+        <p><strong>Place of Birth:</strong> {{ employee.place_of_birth or '' }}</p>
+        <p><strong>Country of Birth:</strong> {{ employee.country_of_birth or '' }}</p>
+        <p><strong>Nationality:</strong> {{ employee.nationality or '' }}</p>
     </div>
 
     <div class="section">
         <h3>Contact Information</h3>
-        <label>Phone:</label><br>
-        <input type="tel" name="phone" value="{{ employee.phone or '' }}"><br><br>
-
-        <label>Email:</label><br>
-        <input type="email" name="email" value="{{ employee.email or '' }}"><br><br>
+        <p><strong>Phone:</strong> {{ employee.phone or '' }}</p>
+        <p><strong>Email:</strong> {{ employee.email or '' }}</p>
     </div>
 
     <div class="section">
         <h3>Address</h3>
-        <label>Street and House Number:</label><br>
-        <input type="text" name="street_and_house_number" value="{{ employee.street_and_house_number or '' }}"><br><br>
-
-        <label>ZIP Code:</label><br>
-        <input type="text" name="zip_code" value="{{ employee.zip_code or '' }}"><br><br>
-
-        <label>City:</label><br>
-        <input type="text" name="city" value="{{ employee.city or '' }}"><br><br>
-
-        <label>Country:</label><br>
-        <input type="text" name="country" value="{{ employee.country or 'Deutschland' }}"><br><br>
+        <p><strong>Street and House Number:</strong> {{ employee.street_and_house_number or '' }}</p>
+        <p><strong>ZIP Code:</strong> {{ employee.zip_code or '' }}</p>
+        <p><strong>City:</strong> {{ employee.city or '' }}</p>
+        <p><strong>Country:</strong> {{ employee.country or 'Deutschland' }}</p>
     </div>
 
     <div class="section">
         <h3>Tax & Financial Information</h3>
-        <label>Steuer ID:</label><br>
-        <input type="text" name="steuer_id" value="{{ employee.steuer_id or '' }}"><br><br>
-
-        <label>Steuerklasse:</label><br>
-        <input type="number" name="steuerklasse" min="1" max="6" value="{{ employee.steuerklasse or '' }}"><br><br>
-
-        <label>IBAN:</label><br>
-        <input type="text" name="iban" value="{{ employee.iban or '' }}"><br><br>
+        <p><strong>Steuer ID:</strong> {{ employee.steuer_id or '' }}</p>
+        <p><strong>Steuerklasse:</strong> {{ employee.steuerklasse or '' }}</p>
+        <p><strong>IBAN:</strong> {{ employee.iban or '' }}</p>
         
     </div>
 
     <div class="section">
         <h3>Employment Details</h3>
-        <label>Start Date:</label><br>
-        <input type="date" name="start_date" value="{{ employee.start_date or '' }}"><br><br>
+        
+        <p><strong>Start Date:</strong> {{ employee.start_date or '' }}</p>
+        <p><strong>Contract Type:</strong> {{ employee.contract_type or '' }}</p>
+        <p><strong>End Date:</strong> {{ employee.end_date or '' }}</p>
+        <p><strong>Disabled:</strong> {{ employee.disabled or '' }}</p>
+        <p><strong>Status:</strong> {{ employee.status or '' }}</p>
+    </div>
 
-        <label>Contract Type:</label><br>
-        <input type="text" name="contract_type" list="contract-types" value="{{ employee.contract_type or '' }}"><br><br>
-        <datalist id="contract-types">
-            <option value="permanent">
-            <option value="temporary">
-        </datalist>
-
-        <label>End Date:</label><br>
-        <input type="date" name="end_date" value="{{ employee.end_date or '' }}"><br><br>
-
-        <label>Disabled:</label><br>
-        <input type="text" name="disabled" value="{{ employee.disabled or '' }}"><br><br>
-
-        <label>Status:</label><br>
-        <select name="status">
-            <option value="draft" {% if employee.status == "draft" %}selected{% endif %}>draft</option>
-            <option value="under_review" {% if employee.status == "under_review" %}selected{% endif %}>under_review</option>
-            <option value="approved" {% if employee.status == "approved" %}selected{% endif %}>approved</option>
-        </select><br><br>
 
     <div class="section">
         <h3>System Information</h3>
-        <label>Ordio ID:</label><br>
-        <input type="text" name="ordio_id" value="{{ employee.ordio_id or '' }}"><br><br>
-
+        <p><strong>Ordio ID:</strong> {{ employee.ordio_id or '' }}</p>
         <p><strong>Created At:</strong> {{ employee.created_at }}</p>
         <p><strong>Updated At:</strong> {{ employee.updated_at }}</p>
         <p><strong>Approved At:</strong> {{ employee.approved_at or 'Not approved' }}</p>
         <p><strong>Approved By:</strong> {{ employee.approved_by or 'Not approved' }}</p>
         <p><strong>Is Deleted:</strong> {{ employee.is_deleted }}</p>
-
         <p><strong>Deleted Reason:</strong> {{ employee.deleted_reason or 'Not applicable' }}</p>
+    
     </div>
 
-    <br>
-    <button type="submit">Update Employee</button>
-    <br><br>
-    <a href="/upload">Create another Employee</a> | <a href="/">Home</a>
-    </form>
+    <div class="actions">
+        <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">Edit</a>
+        <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="/upload" class="btn btn-secondary">Create New Employee</a>
+    </div>
 </body>
 </html>

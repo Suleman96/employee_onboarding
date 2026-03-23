@@ -10,12 +10,12 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Depends, Form
-from fastapi.concurrency import asynccontextmanager
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from database import create_tables, get_db, Employee
+from database import create_tables, get_db, Employee, AuditLog
+
+import json
 
 # Initialize FastAPI app with lifespan for startup tasks
 @asynccontextmanager # This allows us to run code on startup (like creating tables) and optionally on shutdown
@@ -36,10 +36,20 @@ templates = Jinja2Templates(directory = "templates")
 
 
 # Home route 
-# This route serves the home page of the application. It uses Jinja2 templates to render an HTML page located in the "templates" directory. When a user accesses the root URL ("/"), this function is called, and it returns the rendered "index.html" template along with the request context.
+# This route serves the home page of the application. 
+# It uses Jinja2 templates to render an HTML page located in the "templates" directory. 
+# When a user accesses the root URL ("/"), this function is called, and it returns the rendered "index.html" 
+# template along with the request context.
 @app.get("/", response_class=HTMLResponse)
-def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+def home(request: Request, db:Session=Depends(get_db)):
+    employees = db.query(Employee).order_by(Employee.created_at.desc()).all()
+    
+    return templates.TemplateResponse(
+        "index.html", {
+            "request": request,
+            "employees": employees 
+            }
+        )
 
 
 @app.get("/health")
@@ -104,6 +114,16 @@ def create_employee(
     db.add(new_employee)
     db.commit()
     db.refresh(new_employee)
+    
+    audit_entry=AuditLog(
+        action="create",
+        employee_id= new_employee.id,
+        details=f"Created Employee: {new_employee.first_name or ''} {new_employee.last_name or ''}",
+        performed_by="system"
+    )
+    db.add(audit_entry)
+    db.commit()
+    
     return RedirectResponse(url=f"/review/{new_employee.id}", status_code=303)
 
 
@@ -120,6 +140,20 @@ def review_employee(employee_id:int, request: Request, db:Session = Depends(get_
             "employee": employee
             }
             
+    )
+
+@app.get("/review/{employee_id}/edit", response_class=HTMLResponse)
+def edit_employee_page(employee_id:int, request: Request, db:Session= Depends(get_db)):
+    employee=db.query(Employee).filter(Employee.id ==employee_id).first()
+    if not employee:
+        return HTMLResponse(context= "<h1>Employee not found</h1>", status_code=404)
+    
+    return templates.TemplateResponse(
+        "edit_review.html",
+        {
+            "request": request,
+            "employee": employee
+        }
     )
 @app.post("/review/{employee_id}")
 def update_employee(
@@ -178,6 +212,15 @@ def update_employee(
 
     db.commit()
     db.refresh(employee)
+    
+    audit_entry =AuditLog(
+        action="update",
+        employee_id=employee.id,
+        details= f"Updated Employee: {employee.first_name or ''} {employee.last_name or ''}",
+        performed_by="system"
+    )
+    db.add(audit_entry)
+    db.commit()
     return RedirectResponse(url=f"/review/{employee.id}", status_code=303)
     
 
@@ -193,6 +236,24 @@ def list_employees(db: Session = Depends(get_db)):
             "last_name": emp.last_name,
             "email": emp.email,
             "status": emp.status
+        })
+
+    return results
+
+
+@app.get("/audit-logs")
+def list_audit_logs(db: Session = Depends(get_db)):
+    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
+
+    results = []
+    for log in logs:
+        results.append({
+            "id": log.id,
+            "action": log.action,
+            "employee_id": log.employee_id,
+            "details": log.details,
+            "performed_by": log.performed_by,
+            "timestamp": log.timestamp
         })
 
     return results

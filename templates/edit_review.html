@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Employee</title>
+    <title>Edit Employee</title>
     <style>
         body {font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: linear-gradient(145deg, #f1f5fb 0%, #e1e9f8 100%);color: #2a3b57;}
         
-        .container { max-width: 940px; width: 92%; margin: 30px auto; background: #ffffff; border-radius: 14px;
+        .container { max-width: auto; width: 92%; margin: 30px auto; background: #ffffff; border-radius: 14px;
             box-shadow: 0 12px 28px rgba(30, 47, 80, 0.16);padding: 24px 26px 32px;
             border: 1px solid #d6e1f9;        }
         h1 {
@@ -37,8 +37,8 @@
         }
         input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], select {
             width: 100%;
-            max-width: 350px;
-            min-height: 30px;
+            max-width: 300px;
+            min-height: 34px;
             padding: 8px 10px;
             border: 1px solid #aac2ea;
             border-radius: 8px;
@@ -87,64 +87,69 @@
 </head>
 <body>
     <div class="container">
-    <h1>Create New Employee</h1>
+    <h1>Edit Employee</h1>
 
-    <form action="/employees/new" method="post" class="form-grid">
+    <form action="/review/{{ employee.id }}" method="post" class="form-grid">
 
         <fieldset>
             <legend><strong>Basic Information</strong></legend>
-            <div class="field"><label>First Name</label><input type="text" name="first_name"></div>
-            <div class="field"><label>Last Name</label><input type="text" name="last_name"></div>
-            <div class="field"><label>Gender</label><select name="gender"><option value="">--Choose--</option><option value="male">male</option><option value="female">female</option><option value="non-binary">non-binary</option><option value="unspecified">unspecified</option></select></div>
-            <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
+            <div class="field"><label>ID</label><input type="text" name="id" value="{{ employee.id }}" readonly></div>
+            <div class="field"><label>First Name</label><input type="text" name="first_name" value="{{ employee.first_name or '' }}"></div>
+            <div class="field"><label>Last Name</label><input type="text" name="last_name" value="{{ employee.last_name or '' }}"></div>
+            <div class="field"><label>Gender</label><select name="gender"><option value="">--Choose--</option><option value="male" {% if employee.gender == "male" %}selected{% endif %}>male</option><option value="female" {% if employee.gender == "female" %}selected{% endif %}>female</option><option value="non-binary" {% if employee.gender == "non-binary" %}selected{% endif %}>non-binary</option><option value="unspecified" {% if employee.gender == "unspecified" %}selected{% endif %}>unspecified</option></select></div>
+            <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth" value="{{ employee.date_of_birth or '' }}"></div>
         </fieldset>
 
         <fieldset>
             <legend><strong>Birth & Origin</strong></legend>
-            <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth"></div>
-            <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth"></div>
-            <div class="field full-width"><label>Nationality</label><input type="text" name="nationality" list="nationality-list"></div>
+            <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth" value="{{ employee.place_of_birth or '' }}"></div>
+            <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth" value="{{ employee.country_of_birth or '' }}"></div>
+            <div class="field full-width"><label>Nationality</label><input type="text" name="nationality" value="{{ employee.nationality or '' }}" list="nationality-list"></div>
         </fieldset>
 
         <fieldset>
             <legend><strong>Contact</strong></legend>
-            <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
-            <div class="field"><label>Email</label><input type="email" name="email"></div>
+            <div class="field"><label>Phone</label><input type="tel" name="phone" value="{{ employee.phone or '' }}"></div>
+            <div class="field"><label>Email</label><input type="email" name="email" value="{{ employee.email or '' }}"></div>
         </fieldset>
 
         <fieldset>
             <legend><strong>Address</strong></legend>
-            <div class="field"><label>Street and House Number</label><input type="text" name="street_and_house_number"></div>
-            <div class="field"><label>ZIP Code</label><input type="text" name="zip_code"></div>
-            <div class="field"><label>City</label><input type="text" name="city"></div>
-            <div class="field full-width"><label>Country of stay</label><input type="text" name="country" value="Deutschland"></div>
+            <div class="field"><label>Street and House Number</label><input type="text" name="street_and_house_number" value="{{ employee.street_and_house_number or '' }}"></div>
+            <div class="field"><label>ZIP Code</label><input type="text" name="zip_code" value="{{ employee.zip_code or '' }}"></div>
+            <div class="field"><label>City</label><input type="text" name="city" value="{{ employee.city or '' }}"></div>
+            <div class="field full-width"><label>Country of stay</label><input type="text" name="country" value="{{ employee.country or 'Deutschland' }}"></div>
         </fieldset>
 
         <fieldset>
             <legend><strong>Tax & Financial</strong></legend>
-            <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id"></div>
-            <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6"></div>
-            <div class="field full-width"><label>IBAN</label><input type="text" name="iban"></div>
+            <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id" value="{{ employee.steuer_id or '' }}"></div>
+            <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6" value="{{ employee.steuerklasse or '' }}"></div>
+            <div class="field full-width"><label>IBAN</label><input type="text" name="iban" value="{{ employee.iban or '' }}"></div>
         </fieldset>
 
         <fieldset>
             <legend><strong>Employment</strong></legend>
-            <div class="field"><label>Start Date</label><input type="date" name="start_date"></div>
-            <div class="field"><label>Contract Type</label><input type="text" name="contract_type" list="contract-types"></div>
-            <div class="field"><label>End Date</label><input type="date" name="end_date"></div>
-            <div class="field"><label>Disabled</label><input type="text" name="disabled" list="disabled-options"></div>
-            <div class="field full-width"><label>Status</label><select name="status"><option value="draft" selected>draft</option><option value="under_review">under_review</option><option value="approved">approved</option></select></div>
+            <div class="field"><label>Start Date</label><input type="date" name="start_date" value="{{ employee.start_date or '' }}"></div>
+            <div class="field"><label>Contract Type</label><input type="text" name="contract_type" value="{{ employee.contract_type or '' }}" list="contract-types"></div>
+            <div class="field"><label>End Date</label><input type="date" name="end_date" value="{{ employee.end_date or '' }}"></div>
+            <div class="field"><label>Disabled</label><input type="text" name="disabled" value="{{ employee.disabled or '' }}" list="disabled-options"></div>
+            <div class="field full-width"><label>Status</label><select name="status"><option value="draft" {% if employee.status == "draft" %}selected{% endif %}>draft</option><option value="under_review" {% if employee.status == "under_review" %}selected{% endif %}>under_review</option><option value="approved" {% if employee.status == "approved" %}selected{% endif %}>approved</option></select></div>
         </fieldset>
 
-        <button type="submit" class="btn-submit">Save Employee</button>
+        <fieldset>
+            <legend><strong>System Information</strong></legend>
+            <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id" value="{{ employee.ordio_id or '' }}"></div>
+        </fieldset>
+
+        <button type="submit" class="btn-submit">Save Changes</button>
     </form>
 
     <datalist id="contract-types">
         <option value="permanent">
         <option value="temporary">
-        <option value="minijob">
-        <option value="internship">
         <option value="freelance">
+        <option value="intern">
     </datalist>
 
     <datalist id="disabled-options">
