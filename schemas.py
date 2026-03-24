@@ -13,22 +13,31 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 class EmployeeBase(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    
+    
     date_of_birth: Optional[str] = None
     place_of_birth: Optional[str] = None
     country_of_birth: Optional[str] = None
     nationality: Optional[str] = None
     
-    street_and_number: Optional[str] = None
+    street_and_house_number: Optional[str] = None
     phone: Optional[str] = None
     zip_code: Optional[str] = None
     city: Optional[str] = None
     email: Optional[EmailStr] = None
-    county: Optional[str] = None
+    country: Optional[str] = None
     
+    ausweis_number: Optional[str] = None
+    reise_pass_number: Optional[str] = None
+    krankenkasse: Optional[str] = None
+    krankenkasse_nummer: Optional[str] = None
     steuer_id: Optional[str] = None
-    steuerklasse: Optional[str] = None
-    iban: Optional[str] = None
-    bic: Optional[str] = None
+    steuerklasse: Optional[int] = None
+    sozialversicherungsnummer: Optional[str] = None
+    bank_name: Optional[str] = None
+    bank_iban: Optional[str] = None
+    bank_bic: Optional[str] = None
+    bank_account_holder: Optional[str] = None
     
     start_date: Optional[str] = None
     contract_type: Optional[str] = None
@@ -49,7 +58,7 @@ class EmployeeUpdate(EmployeeBase):
 class EmployeeResponse(BaseModel):
     id: int
     created_at: datetime
-    update_at: datetime 
+    updated_at: datetime 
     approved_at: Optional[datetime] = None
     approved_by: Optional[str] = None
     is_deleted: bool = False

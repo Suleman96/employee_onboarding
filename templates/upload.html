@@ -107,6 +107,12 @@
         </fieldset>
 
         <fieldset>
+            <legend><strong>Identity Documents</strong></legend>
+            <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number"></div>
+            <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number"></div>
+        </fieldset>
+
+        <fieldset>
             <legend><strong>Contact</strong></legend>
             <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
             <div class="field"><label>Email</label><input type="email" name="email"></div>
@@ -121,10 +127,24 @@
         </fieldset>
 
         <fieldset>
+            <legend><strong>Health Insurance</strong></legend>
+            <div class="field"><label>Krankenkasse</label><input type="text" name="krankenkasse"></div>
+            <div class="field"><label>Krankenkasse Nummer</label><input type="text" name="krankenkasse_nummer"></div>
+        </fieldset>
+
+        <fieldset>
             <legend><strong>Tax & Financial</strong></legend>
             <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id"></div>
             <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6"></div>
-            <div class="field full-width"><label>IBAN</label><input type="text" name="iban"></div>
+            <div class="field"><label>Sozialversicherungsnummer</label><input type="text" name="sozialversicherungsnummer"></div>
+        </fieldset>
+
+        <fieldset>
+            <legend><strong>Banking</strong></legend>
+            <div class="field"><label>Bank Name</label><input type="text" name="bank_name"></div>
+            <div class="field"><label>BIC</label><input type="text" name="bank_bic"></div>
+            <div class="field"><label>Bank Account Holder</label><input type="text" name="bank_account_holder"></div>
+            <div class="field full-width"><label>IBAN</label><input type="text" name="bank_iban"></div>
         </fieldset>
 
         <fieldset>
@@ -134,6 +154,7 @@
             <div class="field"><label>End Date</label><input type="date" name="end_date"></div>
             <div class="field"><label>Disabled</label><input type="text" name="disabled" list="disabled-options"></div>
             <div class="field full-width"><label>Status</label><select name="status"><option value="draft" selected>draft</option><option value="under_review">under_review</option><option value="approved">approved</option></select></div>
+            <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
         </fieldset>
 
         <button type="submit" class="btn-submit">Save Employee</button>

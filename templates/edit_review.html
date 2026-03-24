@@ -104,7 +104,9 @@
             <legend><strong>Birth & Origin</strong></legend>
             <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth" value="{{ employee.place_of_birth or '' }}"></div>
             <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth" value="{{ employee.country_of_birth or '' }}"></div>
-            <div class="field full-width"><label>Nationality</label><input type="text" name="nationality" value="{{ employee.nationality or '' }}" list="nationality-list"></div>
+            <div class="field"><label>Nationality</label><input type="text" name="nationality" value="{{ employee.nationality or '' }}" list="nationality-list"></div>
+            <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number" value="{{ employee.ausweis_number or '' }}"></div>
+            <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number" value="{{ employee.reise_pass_number or '' }}"></div>
         </fieldset>
 
         <fieldset>
@@ -122,10 +124,24 @@
         </fieldset>
 
         <fieldset>
+            <legend><strong>Health Insurance</strong></legend>
+            <div class="field"><label>Krankenkasse</label><input type="text" name="krankenkasse" value="{{ employee.krankenkasse or '' }}"></div>
+            <div class="field"><label>Krankenkasse Nummer</label><input type="text" name="krankenkasse_nummer" value="{{ employee.krankenkasse_nummer or '' }}"></div>
+        </fieldset>
+
+        <fieldset>
             <legend><strong>Tax & Financial</strong></legend>
             <div class="field"><label>Steuer ID</label><input type="text" name="steuer_id" value="{{ employee.steuer_id or '' }}"></div>
             <div class="field"><label>Steuerklasse</label><input type="number" name="steuerklasse" min="1" max="6" value="{{ employee.steuerklasse or '' }}"></div>
-            <div class="field full-width"><label>IBAN</label><input type="text" name="iban" value="{{ employee.iban or '' }}"></div>
+            <div class="field"><label>Sozialversicherungsnummer</label><input type="text" name="sozialversicherungsnummer" value="{{ employee.sozialversicherungsnummer or '' }}"></div>
+        </fieldset>
+
+        <fieldset>
+            <legend><strong>Banking</strong></legend>
+            <div class="field"><label>Bank Name</label><input type="text" name="bank_name" value="{{ employee.bank_name or '' }}"></div>
+            <div class="field"><label>BIC</label><input type="text" name="bank_bic" value="{{ employee.bank_bic or '' }}"></div>
+            <div class="field"><label>Bank Account Holder</label><input type="text" name="bank_account_holder" value="{{ employee.bank_account_holder or '' }}"></div>
+            <div class="field full-width"><label>IBAN</label><input type="text" name="bank_iban" value="{{ employee.bank_iban or '' }}"></div>
         </fieldset>
 
         <fieldset>

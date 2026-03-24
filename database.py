@@ -36,6 +36,10 @@ class Employee(Base):
 
     
     nationality       = Column(String, nullable=True)
+    ausweis_number   = Column(String, nullable=True)
+    reise_pass_number= Column(String, nullable=True)
+    krankenkasse     = Column(String, nullable=True)
+    krankenkasse_nummer= Column(String, nullable=True)
     street_and_house_number = Column(String, nullable=True)
     phone             = Column(String, nullable=True)
     zip_code          = Column(String, nullable=True)
@@ -45,13 +49,17 @@ class Employee(Base):
     
     
     steuer_id     = Column(String, nullable=True)
+    sozialversicherungsnummer = Column(String, nullable=True)
+    bank_name      = Column(String, nullable=True)
+    bank_bic            = Column(String, nullable=True)
+    bank_account_holder = Column(String, nullable=True)
     steuerklasse  = Column(Integer, nullable=True)
-    iban          = Column(String, nullable=True)
+    bank_iban          = Column(String, nullable=True)
     start_date    = Column(String, nullable=True)
     contract_type = Column(String, nullable=True)
     end_date      = Column(String, nullable=True)
-    disabled      = Column(String, nullable=True, default=False)
-    status        = Column(String, nullable=True, default="pending")
+    disabled      = Column(String, nullable=True, default="false")
+    status        = Column(String, nullable=True, default="draft")
     ordio_id      = Column(String, nullable=True)
     created_at    = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -75,9 +83,11 @@ def create_tables():
     Base.metadata.create_all(bind=engine)
 
 
+
 # Dependency for FastAPI routes
 # This function can be used in FastAPI routes to get a database session
 def get_db():
+  
     db = SessionLocal()
     try:
         # The yield statement allows the function to be used as a context manager in FastAPI routes. It provides a database session to the route handler, and after the request is processed, it ensures that the session is properly closed.
