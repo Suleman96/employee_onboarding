@@ -105,8 +105,16 @@
             <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth" value="{{ employee.place_of_birth or '' }}"></div>
             <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth" value="{{ employee.country_of_birth or '' }}"></div>
             <div class="field"><label>Nationality</label><input type="text" name="nationality" value="{{ employee.nationality or '' }}" list="nationality-list"></div>
-            <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number" value="{{ employee.ausweis_number or '' }}"></div>
-            <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number" value="{{ employee.reise_pass_number or '' }}"></div>
+        </fieldset>
+
+        <fieldset>
+            <legend><strong>Identity Documents</strong></legend>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number" value="{{ employee.ausweis_number or '' }}"></div>
+                <div class="field"><label>Ausweis Expiry Date</label><input type="date" name="ausweis_expiry_date" value="{{ employee.ausweis_expiry_date or '' }}"></div>
+                <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number" value="{{ employee.reise_pass_number or '' }}"></div>
+                <div class="field"><label>Reise Pass Expiry Date</label><input type="date" name="reise_pass_expiry_date" value="{{ employee.reise_pass_expiry_date or '' }}"></div>
+            </div>
         </fieldset>
 
         <fieldset>
@@ -146,9 +154,90 @@
 
         <fieldset>
             <legend><strong>Employment</strong></legend>
-            <div class="field"><label>Start Date</label><input type="date" name="start_date" value="{{ employee.start_date or '' }}"></div>
-            <div class="field"><label>Contract Type</label><input type="text" name="contract_type" value="{{ employee.contract_type or '' }}" list="contract-types"></div>
-            <div class="field"><label>End Date</label><input type="date" name="end_date" value="{{ employee.end_date or '' }}"></div>
+            <div class="field">
+                <label>City of Work</label>
+                <select id="work_city_select" onchange="handleWorkCityChange(this)">
+                    <option value="">-- Choose City --</option>
+                    <option value="Bergisch Gladbach">Bergisch Gladbach</option>
+                    <option value="Berlin">Berlin</option>
+                    <option value="Düsseldorf">Düsseldorf</option>
+                    <option value="Frankfurt">Frankfurt</option>
+                    <option value="Hamburg">Hamburg</option>
+                    <option value="Köln">Köln</option>
+                    <option value="Wien">Wien</option>
+                    <option value="other">Other (type below)</option>
+                </select>
+                <input type="text" name="work_city" id="work_city_input" placeholder="Type city name..." value="{{ employee.work_city or '' }}" style="display:none; margin-top:6px;">
+            </div>
+            <div class="field">
+                <label>Occupation</label>
+                <select id="occupation_select" onchange="handleOccupationChange(this)">
+                    <option value="">-- Choose Occupation --</option>
+                    <optgroup label="Management &amp; Supervision">
+                        <option value="Floor Supervisor" {% if employee.occupation == "Floor Supervisor" %}selected{% endif %}>Floor Supervisor</option>
+                        <option value="HSK Supervisor" {% if employee.occupation == "HSK Supervisor" %}selected{% endif %}>HSK Supervisor</option>
+                        <option value="HSK Manager" {% if employee.occupation == "HSK Manager" %}selected{% endif %}>HSK Manager</option>
+                        <option value="Ass. HSK Manager" {% if employee.occupation == "Ass. HSK Manager" %}selected{% endif %}>Ass. HSK Manager</option>
+                        <option value="STW Supervisor" {% if employee.occupation == "STW Supervisor" %}selected{% endif %}>STW Supervisor</option>
+                        <option value="STW Manager" {% if employee.occupation == "STW Manager" %}selected{% endif %}>STW Manager</option>
+                        <option value="Quality Manager" {% if employee.occupation == "Quality Manager" %}selected{% endif %}>Quality Manager</option>
+                        <option value="Objektleitung NR" {% if employee.occupation == "Objektleitung NR" %}selected{% endif %}>Objektleitung NR</option>
+                    </optgroup>
+                    <optgroup label="Housekeeping (HSK)">
+                        <option value="HSK" {% if employee.occupation == "HSK" %}selected{% endif %}>HSK (Housekeeping)</option>
+                        <option value="Zimmermädchen" {% if employee.occupation == "Zimmermädchen" %}selected{% endif %}>Zimmermädchen</option>
+                        <option value="Minibar" {% if employee.occupation == "Minibar" %}selected{% endif %}>Minibar</option>
+                    </optgroup>
+                    <optgroup label="Reinigung &amp; Cleaning">
+                        <option value="Reinigungskraft" {% if employee.occupation == "Reinigungskraft" %}selected{% endif %}>Reinigungskraft</option>
+                        <option value="Glasreiniger" {% if employee.occupation == "Glasreiniger" %}selected{% endif %}>Glasreiniger</option>
+                        <option value="Public Area" {% if employee.occupation == "Public Area" %}selected{% endif %}>Public Area</option>
+                        <option value="NR (Night Runner)" {% if employee.occupation == "NR (Night Runner)" %}selected{% endif %}>NR (Night Runner)</option>
+                        <option value="STW (Steward)" {% if employee.occupation == "STW (Steward)" %}selected{% endif %}>STW (Steward)</option>
+                    </optgroup>
+                    <optgroup label="Facility">
+                        <option value="Hausmann" {% if employee.occupation == "Hausmann" %}selected{% endif %}>Hausmann</option>
+                        <option value="HM / WM" {% if employee.occupation == "HM / WM" %}selected{% endif %}>HM / WM (Hausmann / Wäschefrau)</option>
+                    </optgroup>
+                    <option value="other">Other (type below)</option>
+                </select>
+                <input type="text" name="occupation" id="occupation_input" placeholder="Type occupation..." value="{{ employee.occupation or '' }}" style="display:none; margin-top:6px;">
+            </div>
+            <div class="field">
+                <label>Employment Type</label>
+                <select name="employment_type">
+                    <option value="">-- Choose --</option>
+                    <option value="Vollzeit" {% if employee.employment_type == "Vollzeit" %}selected{% endif %}>Vollzeit (Full-time)</option>
+                    <option value="Teilzeit" {% if employee.employment_type == "Teilzeit" %}selected{% endif %}>Teilzeit (Part-time)</option>
+                    <option value="Minijob" {% if employee.employment_type == "Minijob" %}selected{% endif %}>Minijob</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Work Schedule — Quick Select</label>
+                <select id="schedule_preset" onchange="applySchedulePreset(this)">
+                    <option value="">-- Choose Preset --</option>
+                    <option value="40|5|8">40 Std / 5 Tage / 8 Std pro Tag</option>
+                    <option value="35|5|7">35 Std / 5 Tage / 7 Std pro Tag</option>
+                    <option value="32|4|8">32 Std / 4 Tage / 8 Std pro Tag</option>
+                    <option value="30|5|6">30 Std / 5 Tage / 6 Std pro Tag</option>
+                    <option value="25|5|5">25 Std / 5 Tage / 5 Std pro Tag</option>
+                    <option value="24|3|8">24 Std / 3 Tage / 8 Std pro Tag</option>
+                    <option value="20|5|4">20 Std / 5 Tage / 4 Std pro Tag</option>
+                    <option value="other">Other (Enter Custom)</option>
+                </select>
+            </div>
+            <div class="field"><label>Weekly Hours (Std/Woche)</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" step="0.5" value="{{ employee.weekly_hours or '' }}" placeholder="e.g. 40" onchange="calcDailyHours()" disabled></div>
+            <div class="field"><label>Work Days / Week (Tage/Woche)</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" value="{{ employee.work_days_per_week or '' }}" placeholder="e.g. 5" onchange="calcDailyHours()" disabled></div>
+            <div class="field"><label>Hours per Day (Std/Tag)</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" step="0.5" value="{{ employee.daily_hours or '' }}" placeholder="e.g. 8" disabled></div>
+            <div class="field">
+                <label>Contract Duration</label>
+                <select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)" disabled>
+                    <option value="temporary" {% if employee.contract_type != "permanent" %}selected{% endif %}>Temporary</option>
+                    <option value="permanent" {% if employee.contract_type == "permanent" %}selected{% endif %}>Permanent</option>
+                </select>
+            </div>
+            <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" value="{{ employee.start_date or '' }}" onchange="autoFillEndDate()"></div>
+            <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date" value="{{ employee.end_date or '' }}"></div>
             <div class="field"><label>Disabled</label><input type="text" name="disabled" value="{{ employee.disabled or '' }}" list="disabled-options"></div>
             <div class="field full-width"><label>Status</label><select name="status"><option value="draft" {% if employee.status == "draft" %}selected{% endif %}>draft</option><option value="under_review" {% if employee.status == "under_review" %}selected{% endif %}>under_review</option><option value="approved" {% if employee.status == "approved" %}selected{% endif %}>approved</option></select></div>
         </fieldset>
@@ -160,13 +249,6 @@
 
         <button type="submit" class="btn-submit">Save Changes</button>
     </form>
-
-    <datalist id="contract-types">
-        <option value="permanent">
-        <option value="temporary">
-        <option value="freelance">
-        <option value="intern">
-    </datalist>
 
     <datalist id="disabled-options">
         <option value="true">
@@ -364,5 +446,166 @@
         <option value="Zambian">
         <option value="Zimbabwean">
     </datalist>
+    <script>
+        const KNOWN_CITIES = ["Berlin", "Köln", "Wien", "Frankfurt", "Hamburg", "Düsseldorf"];
+
+        function handleWorkCityChange(select) {
+            const input = document.getElementById('work_city_input');
+            if (select.value === 'other') {
+                input.style.display = 'block';
+                input.value = '';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = select.value;
+            }
+        }
+
+        function handleOccupationChange(select) {
+            const input = document.getElementById('occupation_input');
+            if (select.value === 'other') {
+                input.style.display = 'block';
+                input.value = '';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = select.value;
+            }
+        }
+
+        function applySchedulePreset(select) {
+            const weeklyInput = document.getElementById('weekly_hours');
+            const daysInput = document.getElementById('work_days_per_week');
+            const dailyInput = document.getElementById('daily_hours');
+            const contractSelect = document.getElementById('contract_type');
+            
+            if (select.value === 'other') {
+                // Enable custom fields when "other" is selected
+                weeklyInput.disabled = false;
+                daysInput.disabled = false;
+                dailyInput.disabled = false;
+                contractSelect.disabled = false;
+                weeklyInput.style.opacity = '1';
+                daysInput.style.opacity = '1';
+                dailyInput.style.opacity = '1';
+                contractSelect.style.opacity = '1';
+            } else if (select.value) {
+                // Apply preset and disable custom fields
+                const [weekly, days, daily] = select.value.split('|');
+                weeklyInput.value = weekly;
+                daysInput.value = days;
+                dailyInput.value = daily;
+                weeklyInput.disabled = true;
+                daysInput.disabled = true;
+                dailyInput.disabled = true;
+                contractSelect.disabled = true;
+                weeklyInput.style.opacity = '0.5';
+                daysInput.style.opacity = '0.5';
+                dailyInput.style.opacity = '0.5';
+                contractSelect.style.opacity = '0.5';
+            } else {
+                // No preset selected, disable custom fields
+                weeklyInput.disabled = true;
+                daysInput.disabled = true;
+                dailyInput.disabled = true;
+                contractSelect.disabled = true;
+                weeklyInput.style.opacity = '0.5';
+                daysInput.style.opacity = '0.5';
+                dailyInput.style.opacity = '0.5';
+                contractSelect.style.opacity = '0.5';
+            }
+        }
+
+        function calcDailyHours() {
+            const weekly = parseFloat(document.getElementById('weekly_hours').value);
+            const days   = parseFloat(document.getElementById('work_days_per_week').value);
+            if (weekly > 0 && days > 0) {
+                const daily = weekly / days;
+                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
+            }
+        }
+
+        function handleContractDurationChange(select) {
+            const endDate = document.getElementById('end_date');
+            if (select.value === 'permanent') {
+                endDate.value = '';
+                endDate.disabled = true;
+                endDate.style.opacity = '0.4';
+            } else {
+                endDate.disabled = false;
+                endDate.style.opacity = '1';
+            }
+        }
+
+        function autoFillEndDate() {
+            const endDate = document.getElementById('end_date');
+            if (endDate.disabled) return;
+            const startVal = document.getElementById('start_date').value;
+            if (!startVal) return;
+            const start = new Date(startVal);
+            const end = new Date(start);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setDate(end.getDate() - 1);
+            endDate.value = end.toISOString().split('T')[0];
+        }
+
+        // Disable end date on load if contract is permanent
+        (function initContractDuration() {
+            const select = document.getElementById('contract_type');
+            if (select && select.value === 'permanent') {
+                const endDate = document.getElementById('end_date');
+                endDate.disabled = true;
+                endDate.style.opacity = '0.4';
+            }
+        })();
+
+        // Pre-select schedule preset if it matches the saved values
+        (function initSchedulePreset() {
+            const weekly = document.getElementById('weekly_hours').value;
+            const days   = document.getElementById('work_days_per_week').value;
+            const daily  = document.getElementById('daily_hours').value;
+            if (!weekly) return;
+            const key = `${weekly}|${days}|${daily}`;
+            const preset = document.getElementById('schedule_preset');
+            for (const opt of preset.options) {
+                if (opt.value === key) { preset.value = key; break; }
+            }
+        })();
+
+        // Pre-populate the city dropdown from the existing saved value
+        (function initWorkCity() {
+            const input = document.getElementById('work_city_input');
+            const select = document.getElementById('work_city_select');
+            const savedCity = input.value.trim();
+            if (!savedCity) return;
+            if (KNOWN_CITIES.includes(savedCity)) {
+                select.value = savedCity;
+            } else {
+                select.value = 'other';
+                input.style.display = 'block';
+            }
+        })();
+
+        // Pre-populate the occupation dropdown from the existing saved value
+        (function initOccupation() {
+            const input = document.getElementById('occupation_input');
+            const select = document.getElementById('occupation_select');
+            const savedOccupation = input.value.trim();
+            if (!savedOccupation) return;
+            // Try to find it in the select options
+            let found = false;
+            for (const option of select.options) {
+                if (option.value === savedOccupation) {
+                    select.value = savedOccupation;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                select.value = 'other';
+                input.style.display = 'block';
+            }
+        })();
+    </script>
 </body>
 </html>

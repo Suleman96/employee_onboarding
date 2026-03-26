@@ -10,10 +10,11 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from database import create_tables, get_db, Employee, AuditLog
+from contracts.generator import generate_contract_for_employee
 
 from typing import List
 from schemas import EmployeeCreate, EmployeeUpdate, EmployeeResponse, AuditLogResponse
@@ -68,75 +69,119 @@ def upload_page(request: Request):
 @app.post("/employees/new")
 def create_employee(
     first_name: str = Form(None),
+    middle_name: str = Form(None),
     last_name: str = Form(None),
     gender: str = Form(None),
     date_of_birth: str = Form(None),
     place_of_birth: str = Form(None),
     country_of_birth: str = Form(None),
+    nationality: str = Form(None),
+    marital_status: str = Form(None),
     
     ausweis_number: str = Form(None),
+    ausweis_expiry_date: str = Form(None),
     reise_pass_number: str = Form(None),
-    nationality: str = Form(None),
-
-    phone: str = Form(None),
-    email: str = Form(None),
+    reise_pass_expiry_date: str = Form(None),
+    working_permit_number: str = Form(None),
+    working_permit_expiry: str = Form(None),
+    visa_number: str = Form(None),
+    visa_expiry: str = Form(None),
     
     street_and_house_number: str = Form(None),
+    phone: str = Form(None),
+    emergency_contact_name: str = Form(None),
+    emergency_contact_phone: str = Form(None),
     zip_code: str = Form(None),
     city: str = Form(None),
+    email: str = Form(None),
     country: str = Form("Deutschland"),
     
     krankenkasse: str = Form(None),
     krankenkasse_nummer: str = Form(None),
-
     steuer_id: str = Form(None),
     steuerklasse: int = Form(None),
-    sozialversicherungsnummer : str = Form(None),
+    sozialversicherungsnummer: str = Form(None),
     
     bank_name: str = Form(None),
     bank_iban: str = Form(None),
     bank_bic: str = Form(None),
     bank_account_holder: str = Form(None),
-
+    
+    work_city: str = Form(None),
+    department: str = Form(None),
+    employment_type: str = Form(None),
+    occupation: str = Form(None),
+    position_level: str = Form(None),
+    weekly_hours: float = Form(None),
+    work_days_per_week: float = Form(None),
+    daily_hours: float = Form(None),
     start_date: str = Form(None),
     contract_type: str = Form(None),
     end_date: str = Form(None),
-    disabled: str = Form(None),
+    probation_period_months: int = Form(None),
+    previous_employer: str = Form(None),
+    education_level: str = Form(None),
+    
+    disabled: bool = Form(None),
     status: str = Form("draft"),
     ordio_id: str = Form(None),
     db: Session = Depends(get_db)
 ):    
     new_employee = Employee(
         first_name=first_name,
+        middle_name=middle_name,
         last_name=last_name,
         gender=gender,
         date_of_birth=date_of_birth,
         place_of_birth=place_of_birth,
         country_of_birth=country_of_birth,
-        
-        phone=phone,
-        email=email,
-
-        ausweis_number=ausweis_number,
-        reise_pass_number=reise_pass_number,
         nationality=nationality,
+        marital_status=marital_status,
+        
+        ausweis_number=ausweis_number,
+        ausweis_expiry_date=ausweis_expiry_date,
+        reise_pass_number=reise_pass_number,
+        reise_pass_expiry_date=reise_pass_expiry_date,
+        working_permit_number=working_permit_number,
+        working_permit_expiry=working_permit_expiry,
+        visa_number=visa_number,
+        visa_expiry=visa_expiry,
+        
         street_and_house_number=street_and_house_number,
+        phone=phone,
+        emergency_contact_name=emergency_contact_name,
+        emergency_contact_phone=emergency_contact_phone,
         zip_code=zip_code,
         city=city,
+        email=email,
         country=country,
+        
         krankenkasse=krankenkasse,
         krankenkasse_nummer=krankenkasse_nummer,
         steuer_id=steuer_id,
         steuerklasse=steuerklasse,
         sozialversicherungsnummer=sozialversicherungsnummer,
+        
         bank_name=bank_name,
         bank_iban=bank_iban,
         bank_bic=bank_bic,
         bank_account_holder=bank_account_holder,
         
+        work_city=work_city,
+        department=department,
+        employment_type=employment_type,
+        occupation=occupation,
+        position_level=position_level,
+        weekly_hours=weekly_hours,
+        work_days_per_week=work_days_per_week,
+        daily_hours=daily_hours,
         start_date=start_date,
         contract_type=contract_type,
         end_date=end_date,
+        probation_period_months=probation_period_months,
+        previous_employer=previous_employer,
+        education_level=education_level,
+        
         disabled=disabled,
         status=status,
         ordio_id=ordio_id,
@@ -189,18 +234,28 @@ def edit_employee_page(employee_id:int, request: Request, db:Session= Depends(ge
 def update_employee(
     employee_id:int,
     first_name: str = Form(None),
+    middle_name: str = Form(None),
     last_name: str = Form(None),
     gender: str = Form(None),
     date_of_birth: str = Form(None),
     place_of_birth: str = Form(None),
     country_of_birth: str = Form(None),
+    nationality: str = Form(None),
+    marital_status: str = Form(None),
+    
     ausweis_number: str = Form(None),
+    ausweis_expiry_date: str = Form(None),
     reise_pass_number: str = Form(None),
+    reise_pass_expiry_date: str = Form(None),
+    working_permit_number: str = Form(None),
+    working_permit_expiry: str = Form(None),
+    visa_number: str = Form(None),
+    visa_expiry: str = Form(None),
     
     phone: str = Form(None),
+    emergency_contact_name: str = Form(None),
+    emergency_contact_phone: str = Form(None),
     email: str = Form(None),
-
-    nationality: str = Form(None),
     
     street_and_house_number: str = Form(None),
     zip_code: str = Form(None),
@@ -219,10 +274,23 @@ def update_employee(
     bank_iban: str = Form(None),
     bank_bic: str = Form(None),
     bank_account_holder: str = Form(None),
+    
+    work_city: str = Form(None),
+    department: str = Form(None),
+    employment_type: str = Form(None),
+    occupation: str = Form(None),
+    position_level: str = Form(None),
+    weekly_hours: float = Form(None),
+    work_days_per_week: float = Form(None),
+    daily_hours: float = Form(None),
     start_date: str = Form(None),
     contract_type: str = Form(None),
     end_date: str = Form(None),
-    disabled: str = Form(None),
+    probation_period_months: int = Form(None),
+    previous_employer: str = Form(None),
+    education_level: str = Form(None),
+    
+    disabled: bool = Form(None),
     status: str = Form("draft"),
     ordio_id: str = Form(None),
     
@@ -236,32 +304,59 @@ def update_employee(
     
     incoming_data = {
         "first_name": first_name,
+        "middle_name": middle_name,
         "last_name": last_name,
         "gender": gender,
         "date_of_birth": date_of_birth,
         "place_of_birth": place_of_birth,
         "country_of_birth": country_of_birth,
-        "ausweis_number": ausweis_number,
-        "reise_pass_number": reise_pass_number,
         "nationality": nationality,
+        "marital_status": marital_status,
+        
+        "ausweis_number": ausweis_number,
+        "ausweis_expiry_date": ausweis_expiry_date,
+        "reise_pass_number": reise_pass_number,
+        "reise_pass_expiry_date": reise_pass_expiry_date,
+        "working_permit_number": working_permit_number,
+        "working_permit_expiry": working_permit_expiry,
+        "visa_number": visa_number,
+        "visa_expiry": visa_expiry,
+        
         "phone": phone,
+        "emergency_contact_name": emergency_contact_name,
+        "emergency_contact_phone": emergency_contact_phone,
         "email": email,
         "street_and_house_number": street_and_house_number,
         "zip_code": zip_code,
         "city": city,
         "country": country,
+        
         "krankenkasse": krankenkasse,
         "krankenkasse_nummer": krankenkasse_nummer,
         "steuer_id": steuer_id,
         "steuerklasse": steuerklasse,
         "sozialversicherungsnummer": sozialversicherungsnummer,
+        
         "bank_name": bank_name,
         "bank_iban": bank_iban,
         "bank_bic": bank_bic,
         "bank_account_holder": bank_account_holder,
+        
+        "work_city": work_city,
+        "department": department,
+        "employment_type": employment_type,
+        "occupation": occupation,
+        "position_level": position_level,
+        "weekly_hours": weekly_hours,
+        "work_days_per_week": work_days_per_week,
+        "daily_hours": daily_hours,
         "start_date": start_date,
         "contract_type": contract_type,
         "end_date": end_date,
+        "probation_period_months": probation_period_months,
+        "previous_employer": previous_employer,
+        "education_level": education_level,
+        
         "disabled": disabled,
         "status": status,
         "ordio_id": ordio_id,
@@ -335,7 +430,34 @@ def list_employees(db: Session = Depends(get_db)):
     return employees
 
 
+
+
+@app.get("/generate-contract/{employee_id}")
+def generate_contract(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.id == employee_id).first()
+    if not employee:
+        return {"error": "Employee not found"}
+    
+    output_path = generate_contract_for_employee(employee)
+    audit_entry = AuditLog(
+        action = "generate_contract",
+        employee_id = employee.id,
+        details = json.dumps({"contract_path": str(output_path)}),
+        performed_by="system"
+    )
+    db.add(audit_entry)
+    db.commit()
+    
+    return FileResponse(
+        path=str(output_path),
+        filename=output_path.name,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
 @app.get("/audit-logs", response_model= List[AuditLogResponse])
 def list_audit_logs(db: Session = Depends(get_db)):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
     return logs
+
+

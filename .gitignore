@@ -1,0 +1,69 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment and secrets
+.env
+.env.*
+credentials.json
+secrets.json
+*.key
+*.pem
+*.p12
+
+# Data and generated files
+data/
+logs/
+uploads/
+preprocessed/
+generated_contracts/
+
+# OCR and intermediate artifacts
+ocr/**
+
+# Contracts may contain confidential personal data
+contracts/
+
+# If you have any local SQLite DB or database dump
+*.sqlite3
+*.db
+*.bak
+
+# Python package build
+build/
+dist/
+*.egg-info/
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+ehthumbs.db
+
+# node_modules (in case any frontend tools are added)
+node_modules/
+

@@ -95,7 +95,7 @@
             <legend><strong>Basic Information</strong></legend>
             <div class="field"><label>First Name</label><input type="text" name="first_name"></div>
             <div class="field"><label>Last Name</label><input type="text" name="last_name"></div>
-            <div class="field"><label>Gender</label><select name="gender"><option value="">--Choose--</option><option value="male">male</option><option value="female">female</option><option value="non-binary">non-binary</option><option value="unspecified">unspecified</option></select></div>
+            <div class="field"><label>Gender</label><select name="gender"><option value="">--Choose--</option><option value="male">male</option><option value="female">female</option></select></div>
             <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
         </fieldset>
 
@@ -108,8 +108,12 @@
 
         <fieldset>
             <legend><strong>Identity Documents</strong></legend>
-            <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number"></div>
-            <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number"></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="field"><label>Ausweis Number</label><input type="text" name="ausweis_number"></div>
+                <div class="field"><label>Ausweis Expiry Date</label><input type="date" name="ausweis_expiry_date"></div>
+                <div class="field"><label>Reise Pass Number</label><input type="text" name="reise_pass_number"></div>
+                <div class="field"><label>Reise Pass Expiry Date</label><input type="date" name="reise_pass_expiry_date"></div>
+            </div>
         </fieldset>
 
         <fieldset>
@@ -149,9 +153,90 @@
 
         <fieldset>
             <legend><strong>Employment</strong></legend>
-            <div class="field"><label>Start Date</label><input type="date" name="start_date"></div>
-            <div class="field"><label>Contract Type</label><input type="text" name="contract_type" list="contract-types"></div>
-            <div class="field"><label>End Date</label><input type="date" name="end_date"></div>
+            <div class="field">
+                <label>City of Work</label>
+                <select id="work_city_select" onchange="handleWorkCityChange(this)">
+                    <option value="">-- Choose City --</option>
+                    <option value="Bergisch Gladbach">Bergisch Gladbach</option>
+                    <option value="Berlin">Berlin</option>
+                    <option value="Düsseldorf">Düsseldorf</option>
+                    <option value="Frankfurt">Frankfurt</option>
+                    <option value="Hamburg">Hamburg</option>
+                    <option value="Köln">Köln</option>
+                    <option value="Wien">Wien</option>
+                    <option value="other">Other (type below)</option>
+                </select>
+                <input type="text" name="work_city" id="work_city_input" placeholder="Type city name..." style="display:none; margin-top:6px;">
+            </div>
+            <div class="field">
+                <label>Occupation</label>
+                <select id="occupation_select" onchange="handleOccupationChange(this)">
+                    <option value="">-- Choose Occupation --</option>
+                    <optgroup label="Management &amp; Supervision">
+                        <option value="Floor Supervisor">Floor Supervisor</option>
+                        <option value="HSK Supervisor">HSK Supervisor</option>
+                        <option value="HSK Manager">HSK Manager</option>
+                        <option value="Ass. HSK Manager">Ass. HSK Manager</option>
+                        <option value="STW Supervisor">STW Supervisor</option>
+                        <option value="STW Manager">STW Manager</option>
+                        <option value="Quality Manager">Quality Manager</option>
+                        <option value="Objektleitung NR">Objektleitung NR</option>
+                    </optgroup>
+                    <optgroup label="Housekeeping (HSK)">
+                        <option value="HSK">HSK (Housekeeping)</option>
+                        <option value="Zimmermädchen">Zimmermädchen</option>
+                        <option value="Minibar">Minibar</option>
+                    </optgroup>
+                    <optgroup label="Reinigung &amp; Cleaning">
+                        <option value="Reinigungskraft">Reinigungskraft</option>
+                        <option value="Glasreiniger">Glasreiniger</option>
+                        <option value="Public Area">Public Area</option>
+                        <option value="NR (Night Runner)">NR (Night Runner)</option>
+                        <option value="STW (Steward)">STW (Steward)</option>
+                    </optgroup>
+                    <optgroup label="Facility">
+                        <option value="Hausmann">Hausmann</option>
+                        <option value="HM / WM">HM / WM (Hausmann / Wäschefrau)</option>
+                    </optgroup>
+                    <option value="other">Other (type below)</option>
+                </select>
+                <input type="text" name="occupation" id="occupation_input" placeholder="Type occupation..." style="display:none; margin-top:6px;">
+            </div>
+            <div class="field">
+                <label>Employment Type</label>
+                <select name="employment_type">
+                    <option value="">-- Choose --</option>
+                    <option value="Vollzeit">Vollzeit (Full-time)</option>
+                    <option value="Teilzeit">Teilzeit (Part-time)</option>
+                    <option value="Minijob">Minijob</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Work Schedule — Quick Select</label>
+                <select id="schedule_preset" onchange="applySchedulePreset(this)">
+                    <option value="">-- Choose Preset --</option>
+                    <option value="40|5|8">40 Std / 5 Tage / 8 Std pro Tag</option>
+                    <option value="35|5|7">35 Std / 5 Tage / 7 Std pro Tag</option>
+                    <option value="32|4|8">32 Std / 4 Tage / 8 Std pro Tag</option>
+                    <option value="30|5|6">30 Std / 5 Tage / 6 Std pro Tag</option>
+                    <option value="25|5|5">25 Std / 5 Tage / 5 Std pro Tag</option>
+                    <option value="24|3|8">24 Std / 3 Tage / 8 Std pro Tag</option>
+                    <option value="20|5|4">20 Std / 5 Tage / 4 Std pro Tag</option>
+                    <option value="other">Other (Enter Custom)</option>
+                </select>
+            </div>
+            <div class="field"><label>Weekly Hours (Std/Woche)</label><input type="number" name="weekly_hours" id="weekly_hours" min="1" max="60" placeholder="e.g. 40" onchange="calcDailyHours()" disabled></div>
+            <div class="field"><label>Work Days / Week (Tage/Woche)</label><input type="number" name="work_days_per_week" id="work_days_per_week" min="1" max="7" placeholder="e.g. 5" onchange="calcDailyHours()" disabled></div>
+            <div class="field"><label>Hours per Day (Std/Tag)</label><input type="number" name="daily_hours" id="daily_hours" min="1" max="24" placeholder="e.g. 8" step="0.5" disabled></div>
+            <div class="field">
+                <label>Contract Duration</label>
+                <select name="contract_type" id="contract_type" onchange="handleContractDurationChange(this)" disabled>
+                    <option value="temporary" selected>Temporary</option>
+                    <option value="permanent">Permanent</option>
+                </select>
+            </div>
+            <div class="field"><label>Start Date</label><input type="date" name="start_date" id="start_date" onchange="autoFillEndDate()"></div>
+            <div class="field"><label>End Date</label><input type="date" name="end_date" id="end_date"></div>
             <div class="field"><label>Disabled</label><input type="text" name="disabled" list="disabled-options"></div>
             <div class="field full-width"><label>Status</label><select name="status"><option value="draft" selected>draft</option><option value="under_review">under_review</option><option value="approved">approved</option></select></div>
             <div class="field full-width"><label>Ordio ID</label><input type="text" name="ordio_id"></div>
@@ -159,14 +244,6 @@
 
         <button type="submit" class="btn-submit">Save Employee</button>
     </form>
-
-    <datalist id="contract-types">
-        <option value="permanent">
-        <option value="temporary">
-        <option value="minijob">
-        <option value="internship">
-        <option value="freelance">
-    </datalist>
 
     <datalist id="disabled-options">
         <option value="true">
@@ -307,6 +384,7 @@
         <option value="Omani">
         <option value="Pakistani">
         <option value="Palauan">
+        <option value="Palestinian">
         <option value="Panamanian">
         <option value="Papua New Guinean">
         <option value="Paraguayan">
@@ -364,5 +442,106 @@
         <option value="Zambian">
         <option value="Zimbabwean">
     </datalist>
+    <script>
+        function handleWorkCityChange(select) {
+            const input = document.getElementById('work_city_input');
+            if (select.value === 'other') {
+                input.style.display = 'block';
+                input.value = '';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = select.value;
+            }
+        }
+
+        function handleOccupationChange(select) {
+            const input = document.getElementById('occupation_input');
+            if (select.value === 'other') {
+                input.style.display = 'block';
+                input.value = '';
+                input.focus();
+            } else {
+                input.style.display = 'none';
+                input.value = select.value;
+            }
+        }
+
+        function applySchedulePreset(select) {
+            const weeklyInput = document.getElementById('weekly_hours');
+            const daysInput = document.getElementById('work_days_per_week');
+            const dailyInput = document.getElementById('daily_hours');
+            const contractSelect = document.getElementById('contract_type');
+            
+            if (select.value === 'other') {
+                // Enable custom fields when "other" is selected
+                weeklyInput.disabled = false;
+                daysInput.disabled = false;
+                dailyInput.disabled = false;
+                contractSelect.disabled = false;
+                weeklyInput.style.opacity = '1';
+                daysInput.style.opacity = '1';
+                dailyInput.style.opacity = '1';
+                contractSelect.style.opacity = '1';
+            } else if (select.value) {
+                // Apply preset and disable custom fields
+                const [weekly, days, daily] = select.value.split('|');
+                weeklyInput.value = weekly;
+                daysInput.value = days;
+                dailyInput.value = daily;
+                weeklyInput.disabled = true;
+                daysInput.disabled = true;
+                dailyInput.disabled = true;
+                contractSelect.disabled = true;
+                weeklyInput.style.opacity = '0.5';
+                daysInput.style.opacity = '0.5';
+                dailyInput.style.opacity = '0.5';
+                contractSelect.style.opacity = '0.5';
+            } else {
+                // No preset selected, disable custom fields
+                weeklyInput.disabled = true;
+                daysInput.disabled = true;
+                dailyInput.disabled = true;
+                contractSelect.disabled = true;
+                weeklyInput.style.opacity = '0.5';
+                daysInput.style.opacity = '0.5';
+                dailyInput.style.opacity = '0.5';
+                contractSelect.style.opacity = '0.5';
+            }
+        }
+
+        function calcDailyHours() {
+            const weekly = parseFloat(document.getElementById('weekly_hours').value);
+            const days   = parseFloat(document.getElementById('work_days_per_week').value);
+            if (weekly > 0 && days > 0) {
+                const daily = weekly / days;
+                document.getElementById('daily_hours').value = Number.isInteger(daily) ? daily : daily.toFixed(1);
+            }
+        }
+
+        function handleContractDurationChange(select) {
+            const endDate = document.getElementById('end_date');
+            if (select.value === 'permanent') {
+                endDate.value = '';
+                endDate.disabled = true;
+                endDate.style.opacity = '0.4';
+            } else {
+                endDate.disabled = false;
+                endDate.style.opacity = '1';
+            }
+        }
+
+        function autoFillEndDate() {
+            const endDate = document.getElementById('end_date');
+            if (endDate.disabled) return;
+            const startVal = document.getElementById('start_date').value;
+            if (!startVal) return;
+            const start = new Date(startVal);
+            const end = new Date(start);
+            end.setFullYear(end.getFullYear() + 1);
+            end.setDate(end.getDate() - 1);
+            endDate.value = end.toISOString().split('T')[0];
+        }
+    </script>
 </body>
 </html>

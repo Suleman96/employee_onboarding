@@ -26,47 +26,80 @@ Base = declarative_base()
 
 class Employee(Base):
     __tablename__ = "employees"
-    id            = Column(Integer, primary_key=True, index=True)
-    first_name    = Column(String, nullable=True)
-    last_name     = Column(String, nullable=True)
-    gender        = Column(String, nullable=True, default="unspecified")
-    date_of_birth = Column(String, nullable=True)
-    place_of_birth   = Column(String, nullable=True)
-    country_of_birth = Column(String, nullable=True)
+    id = Column(Integer, primary_key=True, index=True)
 
-    
-    nationality       = Column(String, nullable=True)
-    ausweis_number   = Column(String, nullable=True)
-    reise_pass_number= Column(String, nullable=True)
-    krankenkasse     = Column(String, nullable=True)
-    krankenkasse_nummer= Column(String, nullable=True)
+    # Personal Information
+    first_name = Column(String, nullable=True)
+    middle_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    gender = Column(String, nullable=True, default="unspecified")
+    date_of_birth = Column(String, nullable=True)
+    place_of_birth = Column(String, nullable=True)
+    country_of_birth = Column(String, nullable=True)
+    nationality = Column(String, nullable=True)
+    marital_status = Column(String, nullable=True)  # single, married, divorced, widowed
+
+    # Identification Documents
+    ausweis_number = Column(String, nullable=True)
+    ausweis_expiry_date = Column(String, nullable=True)
+    reise_pass_number = Column(String, nullable=True)
+    reise_pass_expiry_date = Column(String, nullable=True)
+    working_permit_number = Column(String, nullable=True)
+    working_permit_expiry = Column(String, nullable=True)
+    visa_number = Column(String, nullable=True)
+    visa_expiry = Column(String, nullable=True)
+
+    # Contact Information
     street_and_house_number = Column(String, nullable=True)
-    phone             = Column(String, nullable=True)
-    zip_code          = Column(String, nullable=True)
-    city              = Column(String, nullable=True)
-    email             = Column(String, nullable=True, unique=True)
-    country           = Column(String, nullable=True, default="Deutschland")
-    
-    
-    steuer_id     = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
+    emergency_contact_name = Column(String, nullable=True)
+    emergency_contact_phone = Column(String, nullable=True)
+    zip_code = Column(String, nullable=True)
+    city = Column(String, nullable=True)
+    email = Column(String, nullable=True, unique=True)
+    country = Column(String, nullable=True, default="Deutschland")
+
+    # Insurance and Tax Information
+    krankenkasse = Column(String, nullable=True)
+    krankenkasse_nummer = Column(String, nullable=True)
+    steuer_id = Column(String, nullable=True)
+    steuerklasse = Column(Integer, nullable=True)
     sozialversicherungsnummer = Column(String, nullable=True)
-    bank_name      = Column(String, nullable=True)
-    bank_bic            = Column(String, nullable=True)
+
+    # Banking Information
+    bank_name = Column(String, nullable=True)
+    bank_bic = Column(String, nullable=True)
     bank_account_holder = Column(String, nullable=True)
-    steuerklasse  = Column(Integer, nullable=True)
-    bank_iban          = Column(String, nullable=True)
-    start_date    = Column(String, nullable=True)
-    contract_type = Column(String, nullable=True)
-    end_date      = Column(String, nullable=True)
-    disabled      = Column(String, nullable=True, default="false")
-    status        = Column(String, nullable=True, default="draft")
-    ordio_id      = Column(String, nullable=True)
-    created_at    = Column(DateTime, default=datetime.utcnow)
+    bank_iban = Column(String, nullable=True)
+
+    # Employment Information
+    work_city = Column(String, nullable=True)
+    department = Column(String, nullable=True)
+    employment_type = Column(String, nullable=True)  # Vollzeit / Teilzeit / Minijob
+    occupation = Column(String, nullable=True)
+    position_level = Column(String, nullable=True)  # e.g. Junior, Senior, Manager
+    weekly_hours = Column(Float, nullable=True)  # Changed to Float for calculations
+    work_days_per_week = Column(Float, nullable=True)
+    daily_hours = Column(Float, nullable=True)
+    start_date = Column(String, nullable=True)
+    contract_type = Column(String, nullable=True, default="temporary")  # temporary / permanent
+    end_date = Column(String, nullable=True)
+    probation_period_months = Column(Integer, nullable=True)
+    previous_employer = Column(String, nullable=True)
+    education_level = Column(String, nullable=True)  # e.g. Abitur, Bachelor, Master
+
+    # Health and Accessibility
+    disabled = Column(Boolean, nullable=True, default=False)  # Changed to Boolean
+
+    # System Fields
+    status = Column(String, nullable=True, default="draft")  # draft, pending, approved, rejected
+    ordio_id = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    approved_at   = Column(DateTime, nullable=True)
-    approved_by   = Column(String, nullable=True)
-    is_deleted    = Column(Boolean, default=False)
-    deleted_reason= Column(String, nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    approved_by = Column(String, nullable=True)
+    is_deleted = Column(Boolean, default=False)
+    deleted_reason = Column(String, nullable=True)
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
