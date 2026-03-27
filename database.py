@@ -98,6 +98,8 @@ class Employee(Base):
     
     last_contract_path = Column(String, nullable=True)
     last_contract_generated_at = Column(DateTime, nullable=True)
+    last_contract_pdf_path = Column(String, nullable=True)
+    last_contract_pdf_path_generated_at = Column(DateTime, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

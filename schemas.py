@@ -82,6 +82,8 @@ class EmployeeBase(BaseModel):
     # Contract Generation
     last_contract_path: Optional[str] = None
     last_contract_generated_at: Optional[datetime] = None
+    last_contract_pdf_path: Optional[str] = None
+    last_contract_pdf_path_generated_at: Optional[datetime] = None
     
     
     

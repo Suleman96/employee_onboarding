@@ -8,13 +8,14 @@
 
 
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from database import create_tables, get_db, Employee, AuditLog
-from contracts.generator import generate_contract_for_employee
+from contracts.generator import convert_docx_to_pdf, generate_contract_for_employee
 from pathlib import Path
 
 from typing import List
@@ -465,13 +466,23 @@ def generate_contract(employee_id: int, db: Session = Depends(get_db)):
     if not employee:
         return {"error": "Employee not found"}
     
-    from datetime import datetime, timezone
+    # Step 1: Generate the DOCX contract
     output_path = generate_contract_for_employee(employee)
-
-    # Save contract path and generation time to employee record
-    employee.last_contract_path = str(output_path)  # type: ignore
-    employee.last_contract_generated_at = datetime.now(timezone.utc)  # type: ignore
-
+    
+    # Step:  Convert DOCX to PDF
+    pdf_path = convert_docx_to_pdf(output_path)  # You would need to implement this function using a library like python-docx or an external tool
+    
+    
+    # Step 3: Save contract path and generation time to employee record
+    employee.last_contract_path = str(output_path)  
+    employee.last_contract_generated_at = datetime.now(timezone.utc) 
+     
+    # Step 4: Save contract path and generation time to employee record
+    employee.last_contract_pdf_path = str(pdf_path)  
+    employee.last_contract_pdf_generated_at = datetime.now(timezone.utc)  
+    
+    
+    # Step 5: Audit Log
     audit_entry = AuditLog(
         action = "generate_contract",
         employee_id = employee.id,
@@ -510,8 +521,6 @@ def download_last_contract(employee_id: int, db: Session = Depends(get_db)):
         filename=contract_path.name,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
-    
-    
 
 
 
