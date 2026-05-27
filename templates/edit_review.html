@@ -275,6 +275,10 @@
                         <div class="field"><label>Ausweis Expiry</label><input type="date" name="ausweis_expiry_date" value="{{ employee.ausweis_expiry_date or '' }}"></div>
                         <div class="field"><label>Reisepass Number</label><input type="text" name="reise_pass_number" value="{{ employee.reise_pass_number or '' }}"></div>
                         <div class="field"><label>Reisepass Expiry</label><input type="date" name="reise_pass_expiry_date" value="{{ employee.reise_pass_expiry_date or '' }}"></div>
+                        <div class="field"><label>Working Permit No.</label><input type="text" name="working_permit_number" value="{{ employee.working_permit_number or '' }}"></div>
+                        <div class="field"><label>Working Permit Expiry</label><input type="date" name="working_permit_expiry" value="{{ employee.working_permit_expiry or '' }}"></div>
+                        <div class="field"><label>Visa Number</label><input type="text" name="visa_number" value="{{ employee.visa_number or '' }}"></div>
+                        <div class="field"><label>Visa Expiry</label><input type="date" name="visa_expiry" value="{{ employee.visa_expiry or '' }}"></div>
                     </div>
                 </div>
 
@@ -314,9 +318,8 @@
                                 <option value="Düsseldorf" {% if employee.work_city == "Düsseldorf" %}selected{% endif %}>Düsseldorf</option>
                                 <option value="Frankfurt" {% if employee.work_city == "Frankfurt" %}selected{% endif %}>Frankfurt</option>
                                 <option value="Hamburg" {% if employee.work_city == "Hamburg" %}selected{% endif %}>Hamburg</option>
-                                <option value="Köln" {% if employee.work_city == "Köln" %}selected{% endif %}>Köln</option>
                                 <option value="Wien" {% if employee.work_city == "Wien" %}selected{% endif %}>Wien</option>
-                                <option value="other" {% if employee.work_city and employee.work_city not in ["Bergisch Gladbach", "Berlin", "Düsseldorf", "Frankfurt", "Hamburg", "Köln", "Wien"] %}selected{% endif %}>Other</option>
+                                <option value="other" {% if employee.work_city and employee.work_city not in ["Bergisch Gladbach", "Berlin", "Düsseldorf", "Frankfurt", "Hamburg", "Wien"] %}selected{% endif %}>Other</option>
                             </select>
                             <input type="text" name="work_city" id="work_city_input" placeholder="Enter city..." value="{{ employee.work_city or '' }}" style="display:none; margin-top:4px;">
                         </div>
@@ -405,26 +408,58 @@
     </datalist>
     <script>
         // ── Data ─────────────────────────────────────────────────────────────────
-        const CITY_OCCUPATION_OPTIONS = {
-            berlin: [
-                'HSK', 'Zimmermädchen', 'Minibar', 'Reinigungskraft',
-                'Glasreiniger', 'Public Area', 'Hausmann', 'STW', 'NR',
-                'Floor Supervisor', 'HSK Supervisor', 'HSK Manager', 'other'
-            ],
-            wien: [
-                'Reinigungskraft', 'Reinigungskraft TD', 'Reinigungskraft PA',
-                'Reinigungskraft HM', 'Reinigungskraft NR', 'Reinigungskraft Public',
-                'Reinigungskraft STW', 'Zimmermädchen', 'HSK Supervisor', 'HSK Manager',
-                'Ass. HSK Manager', 'STW Supervisor', 'STW Manager',
-                'Objektleitung NR', 'Quality Manager', 'other'
-            ],
-            bergisch_gladbach: ['Hausmann', 'HSK', 'HSK Supervisor', 'NR', 'other'],
-            duesseldorf: ['NR', 'STW', 'other'],
-            frankfurt: ['NR', 'Public Area', 'other'],
-            hamburg: ['NR', 'Public Area', 'other'],
+        // Occupations keyed by city → contract type (befristet / unbefristet)
+        const CITY_CONTRACT_OCCUPATIONS = {
+            berlin: {
+                befristet:   ['Floor Supervisor','Glasreiniger','Hausmann','HSK','Minibar','Minijob','NR','Public Area','Reinigungskraft','STW','other'],
+                unbefristet: ['Floor Supervisor','Glasreiniger','Hausmann','HSK','Minibar','NR','Public Area','STW','other'],
+            },
+            wien: {
+                befristet:   ['Reinigungskraft','Reinigungskraft TD','Reinigungskraft PA','Reinigungskraft HM','Reinigungskraft NR','Reinigungskraft Public','Reinigungskraft STW','Zimmermädchen','HSK Supervisor','HSK Manager','Ass. HSK Manager','STW Supervisor','STW Manager','Objektleitung NR','Quality Manager','other'],
+                unbefristet: ['Reinigungskraft','Reinigungskraft TD','Reinigungskraft PA','Reinigungskraft HM','Reinigungskraft NR','Reinigungskraft Public','Reinigungskraft STW','Zimmermädchen','HSK Supervisor','HSK Manager','Ass. HSK Manager','STW Supervisor','STW Manager','Objektleitung NR','Quality Manager','other'],
+            },
+            bergisch_gladbach: {
+                befristet:   ['Hausmann','HSK','HSK Supervisor','NR','other'],
+                unbefristet: [],
+            },
+            duesseldorf: {
+                befristet:   [],
+                unbefristet: ['NR','STW','other'],
+            },
+            frankfurt: {
+                befristet:   ['NR','Public Area','other'],
+                unbefristet: ['Back of House Manager','Hausmann','HSK','Minibar','NR','Public Area','STW','Supervisor','other'],
+            },
+            hamburg: {
+                befristet:   ['NR','Public Area','other'],
+                unbefristet: ['Back of House Manager','Hausmann','HSK','Minibar','NR','Public Area','STW','Supervisor','other'],
+            },
         };
 
         const CITY_ROLE_SCHEDULES = {
+            berlin: {
+                'Floor Supervisor': ['40|5|8'], 'Glasreiniger': ['40|5|8'],
+                'Hausmann': ['40|5|8'], 'HSK': ['40|5|8'], 'Minibar': ['40|5|8'],
+                'Minijob': ['20|5|4'], 'NR': ['40|5|8'], 'Public Area': ['40|5|8'],
+                'Reinigungskraft': ['40|5|8'], 'STW': ['40|5|8'],
+            },
+            bergisch_gladbach: {
+                'Hausmann':      ['40|5|8'],
+                'HSK':           ['25|5|5', '30|5|6', '35|5|7', '40|5|8'],
+                'HSK Supervisor':['40|5|8'],
+                'NR':            ['40|5|8'],
+            },
+            duesseldorf:  { 'NR': ['40|5|8'], 'STW': ['40|5|8'] },
+            frankfurt: {
+                'Back of House Manager': ['40|5|8'], 'Hausmann': ['40|5|8'],
+                'HSK': ['40|5|8'], 'Minibar': ['40|5|8'], 'NR': ['40|5|8'],
+                'Public Area': ['40|5|8'], 'STW': ['40|5|8'], 'Supervisor': ['40|5|8'],
+            },
+            hamburg: {
+                'Back of House Manager': ['40|5|8'], 'Hausmann': ['40|5|8'],
+                'HSK': ['40|5|8'], 'Minibar': ['40|5|8'], 'NR': ['40|5|8'],
+                'Public Area': ['40|5|8'], 'STW': ['40|5|8'], 'Supervisor': ['40|5|8'],
+            },
             wien: {
                 'Reinigungskraft':        ['20|5|4'],
                 'Reinigungskraft TD':     ['20|5|4', '25|5|5', '30|5|6'],
@@ -459,7 +494,7 @@
             'Kontor Haus', 'Linden Palais', 'Pressehaus Podium', 'Hyatt Regency Vienna', 'Park Hyatt Vienna'
         ];
 
-        const KNOWN_CITIES_LIST = ['Bergisch Gladbach', 'Berlin', 'Düsseldorf', 'Frankfurt', 'Hamburg', 'Köln', 'Wien'];
+        const KNOWN_CITIES_LIST = ['Bergisch Gladbach', 'Berlin', 'Düsseldorf', 'Frankfurt', 'Hamburg', 'Wien'];
 
         // ── Helpers ───────────────────────────────────────────────────────────────
         function normalizeCityForOptions(city) {
@@ -477,8 +512,14 @@
         function populateOccupationOptions(cityKey) {
             const select = document.getElementById('occupation_select');
             const occInput = document.getElementById('occupation_input');
+            const contractTypeEl = document.getElementById('contract_type');
+            const contractType = contractTypeEl ? contractTypeEl.value : '';
+            const contractKey = contractType === 'permanent' ? 'unbefristet' : 'befristet';
+
             const currentVal = occInput.value.trim();
-            const allowed = CITY_OCCUPATION_OPTIONS[cityKey] || ['other'];
+            const cityData = CITY_CONTRACT_OCCUPATIONS[cityKey];
+            let allowed = cityData ? (cityData[contractKey] || []) : [];
+            if (allowed.length === 0) allowed = ['other'];
 
             select.innerHTML = '<option value="">Choose Occupation</option>';
             for (const occ of allowed) {
@@ -488,7 +529,7 @@
                 select.appendChild(opt);
             }
 
-            // Restore selection if still valid in new city
+            // Restore selection if still valid in new city + contract type
             if (currentVal && allowed.includes(currentVal)) {
                 select.value = currentVal;
                 occInput.style.display = 'none';
@@ -558,6 +599,15 @@
                 dpw.value = ''; dpw.readOnly = true; dpw.style.opacity = '0.75';
                 dh.value = ''; dh.readOnly = true; dh.style.opacity = '0.75';
             }
+
+            // Auto-fill when exactly one real schedule option exists for this city+role
+            if (allowedPresets) {
+                const realOptions = presetsToShow.filter(p => p.value && p.value !== 'other');
+                if (realOptions.length === 1 && !currentPreset) {
+                    presetSelect.value = realOptions[0].value;
+                    applySchedulePreset(presetSelect);
+                }
+            }
         }
 
         // ── City change ───────────────────────────────────────────────────────────
@@ -603,7 +653,25 @@
             }
 
             const cityRaw = select.value === 'other' ? input.value : select.value;
-            populateOccupationOptions(normalizeCityForOptions(cityRaw));
+            const cityKey = normalizeCityForOptions(cityRaw);
+
+            // Auto-lock contract type for cities with only one contract kind
+            const contractTypeSelect = document.getElementById('contract_type');
+            if (contractTypeSelect) {
+                if (cityKey === 'bergisch_gladbach') {
+                    contractTypeSelect.value = 'temporary';
+                    contractTypeSelect.disabled = true;
+                    handleContractDurationChange(contractTypeSelect);
+                } else if (cityKey === 'duesseldorf') {
+                    contractTypeSelect.value = 'permanent';
+                    contractTypeSelect.disabled = true;
+                    handleContractDurationChange(contractTypeSelect);
+                } else {
+                    contractTypeSelect.disabled = false;
+                }
+            }
+
+            populateOccupationOptions(cityKey);
             updateScheduleOptionsForSelection();
         }
 
@@ -666,6 +734,12 @@
                 endDate.disabled = false;
                 endDate.style.opacity = '1';
             }
+            // Re-populate occupations when contract type changes
+            const citySelect = document.getElementById('work_city_select');
+            const cityInput  = document.getElementById('work_city_input');
+            const cityRaw = (citySelect && citySelect.value !== 'other') ? citySelect.value : (cityInput ? cityInput.value : '');
+            populateOccupationOptions(normalizeCityForOptions(cityRaw));
+            updateScheduleOptionsForSelection();
         }
 
         function autoFillEndDate() {

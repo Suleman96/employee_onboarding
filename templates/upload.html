@@ -476,7 +476,7 @@
                     <h3>Personal Information</h3>
                     <div class="fields-row">
                         <div class="field"><label>First Name</label><input type="text" name="first_name" value="{{ fd.get('first_name', '') }}" required></div>
-                        <div class="field"><label>Last Name</label><input type="text" name="last_name" vaöie  required></div>
+                        <div class="field"><label>Last Name</label><input type="text" name="last_name" value="{{ fd.get('last_name', '') }}" required></div>
                         <div class="field"><label>Gender</label>
                             <select name="gender">
                                 <option value="">Choose</option>
@@ -485,6 +485,15 @@
                             </select>
                         </div>
                         <div class="field"><label>Date of Birth</label><input type="date" name="date_of_birth"></div>
+                        <div class="field"><label>Marital Status</label>
+                            <select name="marital_status">
+                                <option value="">Choose</option>
+                                <option value="single" {% if fd.get('marital_status') == 'single' %}selected{% endif %}>Single</option>
+                                <option value="married" {% if fd.get('marital_status') == 'married' %}selected{% endif %}>Married</option>
+                                <option value="divorced" {% if fd.get('marital_status') == 'divorced' %}selected{% endif %}>Divorced</option>
+                                <option value="widowed" {% if fd.get('marital_status') == 'widowed' %}selected{% endif %}>Widowed</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -493,10 +502,10 @@
                     <h3>Contact & Location</h3>
                     <div class="fields-row">
                         <div class="field"><label>Phone</label><input type="tel" name="phone"></div>
-                        <div class="field"><label>Email</label><input type="text" name="first_name" value="{{ fd.get('first_name', '') }}" required></div>
-                        <div class="field"><label>Street & House No.</label><input type="text" name="street_and_house_number"></div>
-                        <div class="field"><label>ZIP Code</label><input type="text" name="zip_code"></div>
-                        <div class="field"><label>City</label><input type="text" name="city"></div>
+                        <div class="field"><label>Email</label><input type="text" name="email" value="{{ fd.get('email', '') }}" required></div>
+                        <div class="field"><label>Street & House No.</label><input type="text" name="street_and_house_number" value="{{ fd.get('street_and_house_number', '') }}"></div>
+                        <div class="field"><label>ZIP Code</label><input type="text" name="zip_code" value="{{ fd.get('zip_code', '') }}"></div>
+                        <div class="field"><label>City</label><input type="text" name="city" value="{{ fd.get('city', '') }}"></div>
                         <div class="field"><label>Country</label><input type="text" name="country" value="Deutschland"></div>
                     </div>
                 </div>
@@ -505,8 +514,8 @@
                 <div class="form-section">
                     <h3>Birth & Origin</h3>
                     <div class="fields-row">
-                        <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth"></div>
-                        <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth"></div>
+                        <div class="field"><label>Place of Birth</label><input type="text" name="place_of_birth" value="{{ fd.get('place_of_birth', '') }}"></div>
+                        <div class="field"><label>Country of Birth</label><input type="text" name="country_of_birth" value="{{ fd.get('country_of_birth', '') }}">
                         <div class="field"><label>Nationality</label><input type="text" name="nationality" list="nationality-list"></div>
                     </div>
                 </div>
@@ -519,6 +528,10 @@
                         <div class="field"><label>Ausweis Expiry</label><input type="date" name="ausweis_expiry_date"></div>
                         <div class="field"><label>Reisepass Number</label><input type="text" name="reise_pass_number"></div>
                         <div class="field"><label>Reisepass Expiry</label><input type="date" name="reise_pass_expiry_date"></div>
+                        <div class="field"><label>Working Permit No.</label><input type="text" name="working_permit_number"></div>
+                        <div class="field"><label>Working Permit Expiry</label><input type="date" name="working_permit_expiry"></div>
+                        <div class="field"><label>Visa Number</label><input type="text" name="visa_number"></div>
+                        <div class="field"><label>Visa Expiry</label><input type="date" name="visa_expiry"></div>
                     </div>
                 </div>
 
@@ -867,62 +880,53 @@
                 return byId("employment_type")?.value || "";
             }
 
-            const CITY_OCCUPATION_OPTIONS = {
-                wien: [
-                    { value: "Reinigungskraft", label: "Reinigungskraft" },
-                    { value: "Reinigungskraft TD", label: "Reinigungskraft TD" },
-                    { value: "Reinigungskraft PA", label: "Reinigungskraft PA" },
-                    { value: "Reinigungskraft HM", label: "Reinigungskraft HM" },
-                    { value: "Reinigungskraft NR", label: "Reinigungskraft NR" },
-                    { value: "Reinigungskraft Public", label: "Reinigungskraft Public" },
-                    { value: "Reinigungskraft STW", label: "Reinigungskraft STW" },
-                    { value: "Zimmermädchen", label: "Zimmermädchen" },
-                    { value: "HSK Supervisor", label: "HSK Supervisor" },
-                    { value: "HSK Manager", label: "HSK Manager" },
-                    { value: "Ass. HSK Manager", label: "Ass. HSK Manager" },
-                    { value: "STW Supervisor", label: "STW Supervisor" },
-                    { value: "STW Manager", label: "STW Manager" },
-                    { value: "Objektleitung NR", label: "Objektleitung NR" },
-                    { value: "Quality Manager", label: "Quality Manager" },
-                    { value: "other", label: "Other" }
-                ],
-                bergisch_gladbach: [
-                    { value: "Hausmann", label: "Hausmann" },
-                    { value: "HSK", label: "HSK" },
-                    { value: "HSK Supervisor", label: "HSK Supervisor" },
-                    { value: "NR", label: "NR" },
-                    { value: "other", label: "Other" }
-                ],
-                duesseldorf: [
-                    { value: "NR", label: "NR" },
-                    { value: "STW", label: "STW" },
-                    { value: "other", label: "Other" }
-                ],
-                frankfurt: [
-                    { value: "NR", label: "NR" },
-                    { value: "Public Area", label: "Public Area" },
-                    { value: "other", label: "Other" }
-                ],
-                hamburg: [
-                    { value: "NR", label: "NR" },
-                    { value: "Public Area", label: "Public Area" },
-                    { value: "other", label: "Other" }
-                ]
+            // Occupations keyed by city → contract type (befristet / unbefristet)
+            const CITY_CONTRACT_OCCUPATIONS = {
+                wien: {
+                    befristet:   ['Reinigungskraft','Reinigungskraft TD','Reinigungskraft PA','Reinigungskraft HM','Reinigungskraft NR','Reinigungskraft Public','Reinigungskraft STW','Zimmermädchen','HSK Supervisor','HSK Manager','Ass. HSK Manager','STW Supervisor','STW Manager','Objektleitung NR','Quality Manager','other'],
+                    unbefristet: ['Reinigungskraft','Reinigungskraft TD','Reinigungskraft PA','Reinigungskraft HM','Reinigungskraft NR','Reinigungskraft Public','Reinigungskraft STW','Zimmermädchen','HSK Supervisor','HSK Manager','Ass. HSK Manager','STW Supervisor','STW Manager','Objektleitung NR','Quality Manager','other'],
+                },
+                bergisch_gladbach: {
+                    befristet:   ['Hausmann','HSK','HSK Supervisor','NR','other'],
+                    unbefristet: [],
+                },
+                duesseldorf: {
+                    befristet:   [],
+                    unbefristet: ['NR','STW','other'],
+                },
+                frankfurt: {
+                    befristet:   ['NR','Public Area','other'],
+                    unbefristet: ['Back of House Manager','Hausmann','HSK','Minibar','NR','Public Area','STW','Supervisor','other'],
+                },
+                hamburg: {
+                    befristet:   ['NR','Public Area','other'],
+                    unbefristet: ['Back of House Manager','Hausmann','HSK','Minibar','NR','Public Area','STW','Supervisor','other'],
+                },
             };
 
             const CITY_ROLE_SCHEDULES = {
-
                 berlin: {
-                    "hsk": ["30|5|6", "40|5|8"],
-                    "nr": ["30|5|6", "40|5|8"],
-                    "stw": ["40|5|8"],
-                    "minibar": ["40|5|8"],
-                    "glasreiniger": ["40|5|8"],
-                    "hausmann": ["40|5|8"],
-                    "public area": ["40|5|8"],
-                    "reinigungskraft": ["30|5|6", "40|5|8"],
-                    "floor supervisor": ["40|5|8"],
-                    "minijob": ["20|5|4"]
+                    "floor supervisor": ["40|5|8"], "glasreiniger": ["40|5|8"],
+                    "hausmann": ["40|5|8"], "hsk": ["40|5|8"], "minibar": ["40|5|8"],
+                    "minijob": ["20|5|4"], "nr": ["40|5|8"], "public area": ["40|5|8"],
+                    "reinigungskraft": ["40|5|8"], "stw": ["40|5|8"],
+                },
+                bergisch_gladbach: {
+                    "hausmann":       ["40|5|8"],
+                    "hsk":            ["25|5|5", "30|5|6", "35|5|7", "40|5|8"],
+                    "hsk supervisor": ["40|5|8"],
+                    "nr":             ["40|5|8"],
+                },
+                duesseldorf: { "nr": ["40|5|8"], "stw": ["40|5|8"] },
+                frankfurt: {
+                    "back of house manager": ["40|5|8"], "hausmann": ["40|5|8"],
+                    "hsk": ["40|5|8"], "minibar": ["40|5|8"], "nr": ["40|5|8"],
+                    "public area": ["40|5|8"], "stw": ["40|5|8"], "supervisor": ["40|5|8"],
+                },
+                hamburg: {
+                    "back of house manager": ["40|5|8"], "hausmann": ["40|5|8"],
+                    "hsk": ["40|5|8"], "minibar": ["40|5|8"], "nr": ["40|5|8"],
+                    "public area": ["40|5|8"], "stw": ["40|5|8"], "supervisor": ["40|5|8"],
                 },
                 wien: {
                     "reinigungskraft": ["20|5|4"],
@@ -1036,9 +1040,11 @@
                 if (cityKey === "berlin") {
                     options = getAllowedBerlinRoles(contractTypeCode, subgroup);
                 } else {
-                    options = CITY_OCCUPATION_OPTIONS[cityKey] || [
-                        { value: "other", label: "Other" }
-                    ];
+                    const cityData = CITY_CONTRACT_OCCUPATIONS[cityKey];
+                    const rawList = cityData ? (cityData[contractTypeCode] || []) : [];
+                    options = rawList.length > 0
+                        ? rawList.map(v => ({ value: v, label: v === "other" ? "Other" : v }))
+                        : [{ value: "other", label: "Other" }];
                 }
 
                 const currentValue = occupationInput.value || occupationSelect.value || "";
@@ -1130,6 +1136,15 @@
                     resetFieldValue("daily_hours");
                 }
 
+                // Auto-fill when exactly one real schedule option exists for this city+role
+                if (allowedByRole) {
+                    const realOptions = filteredOptions.filter(opt => opt.value && opt.value !== "" && opt.value !== "other");
+                    if (realOptions.length === 1 && !presetSelect.value) {
+                        presetSelect.value = realOptions[0].value;
+                        window.applySchedulePreset(presetSelect);
+                    }
+                }
+
                 syncScheduleHiddenFields();
             }
 
@@ -1171,6 +1186,21 @@
                 setFieldEnabled("contract_type", !!input.value);
                 setFieldEnabled("occupation_select", false);
                 setFieldEnabled("schedule_preset", false);
+
+                // Auto-lock contract type for cities with only one contract kind
+                const normCity = normalizeCityForOptions(input.value);
+                const ctSelect = byId("contract_type");
+                if (ctSelect && normCity === "bergisch_gladbach") {
+                    ctSelect.value = "temporary";
+                    ctSelect.disabled = true;
+                    window.handleContractDurationChange(ctSelect);
+                } else if (ctSelect && normCity === "duesseldorf") {
+                    ctSelect.value = "permanent";
+                    ctSelect.disabled = true;
+                    window.handleContractDurationChange(ctSelect);
+                } else if (ctSelect) {
+                    ctSelect.disabled = false;
+                }
 
                 const isBerlin = selectedCity === "berlin";
                 const isWien = selectedCity === "wien" || selectedCity === "vienna";

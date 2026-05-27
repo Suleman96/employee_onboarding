@@ -6,6 +6,9 @@
 # I expanded the employee schema incrementally based on downstream dependencies, 
 # especially contract variables and Ordio field mapping
 
+import http
+import subprocess
+import webbrowser
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -35,8 +38,16 @@ async def lifespan(app: FastAPI):
     # Startup code: create database tables
     create_tables()
     print("Database tables created or already exist.")
+    
+    # Start n8n in the background
+    n8n_process = subprocess.Popen("n8n", shell=True)
+    print("n8n started on http://localhost:5678")
+    webbrowser.open("http://localhost:8000")   # opens your app automatically
+
     yield
-    # Shutdown code (if needed) can go here
+     # Stop n8n when the app shuts down
+    n8n_process.terminate()
+    print("n8n process terminated.")
 
 
 # ── Create the FastAPI application ──────────────────────────────
