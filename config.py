@@ -41,9 +41,10 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 PAID_FALLBACK_ENABLED = os.getenv("PAID_FALLBACK_ENABLED", "false").lower() == "true"
 PAID_PROVIDER = os.getenv("PAID_PROVIDER", "mistral")
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
-MISTRAL_OCR_MODEL = os.getenv("MISTRAL_OCR_MODEL", "mistral-ocr-latest")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+MISTRAL_API_KEY       = os.getenv("MISTRAL_API_KEY",       "")
+MISTRAL_OCR_MODEL     = os.getenv("MISTRAL_OCR_MODEL",     "mistral-ocr-latest")
+MISTRAL_EXTRACT_MODEL = os.getenv("MISTRAL_EXTRACT_MODEL", "mistral-small-latest")
+OPENAI_API_KEY        = os.getenv("OPENAI_API_KEY",        "")
 
 # ─────────────────────────────────────────────────────────────
 # Pipeline behavior

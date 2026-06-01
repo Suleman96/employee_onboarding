@@ -458,10 +458,20 @@
                         <div class="field">
                             <label for="ocr_engine">OCR Engine</label>
                             <select id="ocr_engine" name="ocr_engine">
-                                <option value="rapidocr" {% if selected_ocr_engine == 'rapidocr' %}selected{% endif %}>RapidOCR</option>
-                                <option value="tesseract" {% if selected_ocr_engine == 'tesseract' %}selected{% endif %}>Tesseract</option>
+                                <option value="rapidocr" {% if selected_ocr_engine == 'rapidocr' %}selected{% endif %}>RapidOCR (local)</option>
+                                <option value="tesseract" {% if selected_ocr_engine == 'tesseract' %}selected{% endif %}>Tesseract (local)</option>
                                 <option value="mistral" {% if selected_ocr_engine == 'mistral' %}selected{% endif %}>Mistral OCR (cloud)</option>
-                                <option value="auto" {% if selected_ocr_engine == 'auto' %}selected{% endif %}>Auto fallback</option>
+                                <option value="auto" {% if selected_ocr_engine == 'auto' %}selected{% endif %}>Auto local fallback</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="ai_extractor">AI Extractor</label>
+                            <select id="ai_extractor" name="ai_extractor">
+                                <option value="local" {% if selected_ai_extractor != 'mistral' %}selected{% endif %}>Local - Ollama</option>
+                                {% if mistral_available %}
+                                <option value="mistral" {% if selected_ai_extractor == 'mistral' %}selected{% endif %}>Mistral AI (cloud)</option>
+                                {% endif %}
                             </select>
                         </div>
                     </div>
@@ -1474,9 +1484,6 @@
                     "duesseldorf": "duesseldorf",
                     "frankfurt": "frankfurt",
                     "hamburg": "hamburg",
-                    "münchen": "muenchen",
-                    "munchen": "muenchen",
-                    "muenchen": "muenchen",
                     "köln": "koeln",
                     "koeln": "koeln",
                     "wien": "wien",

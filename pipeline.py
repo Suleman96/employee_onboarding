@@ -1,11 +1,16 @@
-# pipeline.py
+"""pipeline.py — document ingestion, OCR, and AI extraction pipeline."""
 
-from dataclasses import dataclass
-from pathlib import Path
+import json
+import logging
 import re
 import shutil
 import uuid
 import zipfile
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from docx import Document
 from PyPDF2 import PdfReader
@@ -27,6 +32,19 @@ DOCX_EXTENSIONS  = {".docx"}
 MIN_USEFUL_OCR_CHARS = 40
 
 
+def _make_employee_folder_name(employee) -> str:
+    """Build a human-readable, filesystem-safe folder name for an employee's uploads.
+
+    Pattern: ``{first}_{last}_{id}``  e.g. ``max_mustermann_42``
+    Falls back to ``employee_{id}`` when no name was extracted yet.
+    """
+    first = (employee.first_name or "").strip().lower().replace(" ", "_")
+    last  = (employee.last_name  or "").strip().lower().replace(" ", "_")
+    # Strip any characters that are invalid in Windows / Linux paths
+    slug  = re.sub(r"[^\w_-]", "", f"{first}_{last}").strip("_") or "employee"
+    return f"{slug}_{employee.id}"
+
+
 # ── Upload session ────────────────────────────────────────────────────────────
 
 @dataclass
@@ -45,25 +63,9 @@ class UploadSession:
     ocr_texts_dir: Path
 
 
-def _create_upload_session() -> UploadSession:
-    """
-    Scan uploads/ for existing upload_NNNN folders, then create the next one.
-    All four subdirectories are created up-front so callers never need to mkdir.
-    """
-    existing_nums = []
-    for d in UPLOADS_DIR.iterdir():
-        if d.is_dir() and d.name.startswith("upload_"):
-            try:
-                existing_nums.append(int(d.name.split("_")[1]))
-            except (IndexError, ValueError):
-                pass
-
-    next_num = max(existing_nums, default=0) + 1
-    name = f"upload_{next_num:04d}"
-    session_dir = UPLOADS_DIR / name
-
+def _build_upload_session(session_dir: Path) -> UploadSession:
     session = UploadSession(
-        name=name,
+        name=session_dir.name,
         session_dir=session_dir,
         originals_dir=session_dir / "originals",
         preprocessed_dir=session_dir / "preprocessed",
@@ -78,6 +80,84 @@ def _create_upload_session() -> UploadSession:
         d.mkdir(parents=True, exist_ok=True)
 
     return session
+
+
+def _next_upload_session_name(parent_dir: Path) -> str:
+    existing_nums = []
+    if parent_dir.exists():
+        for d in parent_dir.iterdir():
+            if d.is_dir() and d.name.startswith("upload_"):
+                try:
+                    existing_nums.append(int(d.name.split("_")[1]))
+                except (IndexError, ValueError):
+                    pass
+    return f"upload_{max(existing_nums, default=0) + 1:04d}"
+
+
+def _create_upload_session(parent_dir: Path | None = None) -> UploadSession:
+    """
+    Scan the target parent for existing upload_NNNN folders, then create the next one.
+    All four subdirectories are created up-front so callers never need to mkdir.
+    """
+    parent_dir = parent_dir or UPLOADS_DIR
+    parent_dir.mkdir(parents=True, exist_ok=True)
+    name = _next_upload_session_name(parent_dir)
+    return _build_upload_session(parent_dir / name)
+
+
+def _employee_root_dir(employee_id: int) -> Path:
+    return UPLOADS_DIR / f"employee_{employee_id}"
+
+
+def _upload_root_for_existing_employee(employee) -> Path:
+    existing = Path(employee.upload_session_dir) if employee.upload_session_dir else None
+    if existing and existing.exists():
+        return existing
+    return _employee_root_dir(employee.id)
+
+
+def _summarize_result_for_manifest(result: dict) -> dict:
+    extracted = result.get("extracted_data") or {}
+    return {
+        "source": result.get("source"),
+        "pipeline_path": result.get("pipeline_path"),
+        "ocr_engine": result.get("ocr_engine"),
+        "best_ocr_engine": result.get("best_ocr_engine"),
+        "raw_text_chars": len(result.get("raw_text") or ""),
+        "sub_result_count": len(result.get("sub_results") or []),
+        "mapped_fields_present": sorted(k for k, v in extracted.items() if v not in (None, "")),
+    }
+
+
+def _write_upload_manifest(
+    session: UploadSession,
+    employee,
+    *,
+    selected_ocr_engine: str,
+    selected_ai_extractor: str | None,
+    all_results: list[dict],
+    mapped: dict,
+    collection: dict | None = None,
+) -> Path:
+    manifest = {
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "employee_id": employee.id,
+        "upload_root_dir": str(Path(employee.upload_session_dir)) if employee.upload_session_dir else None,
+        "latest_upload_session_dir": str(session.session_dir),
+        "session_name": session.name,
+        "ocr_engine": selected_ocr_engine,
+        "ai_extractor": selected_ai_extractor or "local",
+        "original_files": sorted(p.name for p in session.originals_dir.iterdir() if p.is_file()),
+        "ocr_report": str(session.session_dir / "ocr_report.txt")
+        if (session.session_dir / "ocr_report.txt").exists()
+        else None,
+        "mapped_fields_present": sorted(k for k, v in mapped.items() if v not in (None, "")),
+        "results": [_summarize_result_for_manifest(result) for result in all_results],
+        "collection": collection or {},
+    }
+    manifest_path = session.session_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8")
+    return manifest_path
 
 
 # ── File saving ───────────────────────────────────────────────────────────────
@@ -235,7 +315,6 @@ def score_ocr_text(text: str) -> int:
 
 def _strip_mrz_lines(text: str) -> str:
     """Remove MRZ lines (lines with 5+ consecutive < or > chars) from OCR text."""
-    import re
     cleaned = [line for line in text.splitlines() if not re.search(r"[<>]{5,}", line)]
     return "\n".join(cleaned)
 
@@ -289,6 +368,7 @@ def process_image_file(
     image_path: str,
     session: UploadSession,
     ocr_engine_name: str | None = None,
+    ai_extractor_name: str | None = None,
 ) -> dict:
     quality = analyse_image(image_path)
 
@@ -352,8 +432,8 @@ def process_image_file(
     # Skip AI extraction when OCR output is too sparse — blank backs of documents,
     # very dark images, or wholly unreadable scans.
     if len(raw_text.strip()) < MIN_USEFUL_OCR_CHARS:
-        print(f"[INFO] Skipping AI extraction for {Path(image_path).name}: "
-              f"OCR text too short ({len(raw_text.strip())} chars)")
+        logger.info("Skipping AI extraction for %s: OCR text too short (%d chars)",
+                    Path(image_path).name, len(raw_text.strip()))
         return {
             "source": image_path,
             "raw_text": raw_text,
@@ -369,7 +449,7 @@ def process_image_file(
 
     # Skip when the page is pure MRZ (back of ID/permit) — all <> filler, no real data.
     if _is_mrz_only(raw_text):
-        print(f"[INFO] Skipping AI extraction for {Path(image_path).name}: MRZ-only page")
+        logger.info("Skipping AI extraction for %s: MRZ-only page", Path(image_path).name)
         return {
             "source": image_path,
             "raw_text": raw_text,
@@ -389,7 +469,7 @@ def process_image_file(
     text_for_ai = _strip_mrz_lines(raw_text)
 
     doc_type = _detect_doc_type(text_for_ai)
-    extractor = get_ai_extractor("local")
+    extractor = get_ai_extractor(ai_extractor_name or "local")
     extracted = extractor.extract_from_text(
         text_for_ai,
         source_description=f"Document type: {doc_type}",
@@ -426,13 +506,14 @@ def process_docx_file(
     docx_path: str,
     session: UploadSession,
     ocr_engine_name: str | None = None,
+    ai_extractor_name: str | None = None,
 ) -> dict:
     direct_text = extract_text_from_docx(docx_path)
     image_paths = extract_images_from_docx(docx_path, session)
     results = []
 
     if direct_text.strip():
-        extractor = get_ai_extractor("local")
+        extractor = get_ai_extractor(ai_extractor_name or "local")
         extracted = extractor.extract_from_text(
             direct_text,
             source_description=f"DOCX text: {Path(docx_path).name}",
@@ -445,7 +526,7 @@ def process_docx_file(
         })
 
     for img_path in image_paths:
-        results.append(process_image_file(img_path, session, ocr_engine_name=ocr_engine_name))
+        results.append(process_image_file(img_path, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name))
 
     merged = merge_extraction_results(results)
     return {
@@ -463,12 +544,13 @@ def process_pdf_file(
     pdf_path: str,
     session: UploadSession,
     ocr_engine_name: str | None = None,
+    ai_extractor_name: str | None = None,
 ) -> dict:
     direct_text = extract_text_from_pdf_if_possible(pdf_path)
     results = []
 
     if direct_text.strip():
-        extractor = get_ai_extractor("local")
+        extractor = get_ai_extractor(ai_extractor_name or "local")
         extracted = extractor.extract_from_text(
             direct_text,
             source_description=f"PDF text layer: {Path(pdf_path).name}",
@@ -498,15 +580,15 @@ def process_pdf_file(
 
     for emb_img in embedded_images:
         try:
-            results.append(process_image_file(emb_img, session, ocr_engine_name=ocr_engine_name))
+            results.append(process_image_file(emb_img, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name))
         except Exception as e:
-            print(f"[WARN] Skipping embedded PDF image {emb_img}: {e}")
+            logger.warning("Skipping embedded PDF image %s: %s", emb_img, e)
 
     for page_img in page_images:
         try:
-            results.append(process_image_file(page_img, session, ocr_engine_name=ocr_engine_name))
+            results.append(process_image_file(page_img, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name))
         except Exception as e:
-            print(f"[WARN] Skipping rendered PDF page image {page_img}: {e}")
+            logger.warning("Skipping rendered PDF page %s: %s", page_img, e)
 
     if not results:
         raise ValueError(
@@ -530,15 +612,16 @@ def process_single_file(
     file_path: str,
     session: UploadSession,
     ocr_engine_name: str | None = None,
+    ai_extractor_name: str | None = None,
 ) -> dict:
     suffix = Path(file_path).suffix.lower()
 
     if suffix in IMAGE_EXTENSIONS:
-        return process_image_file(file_path, session, ocr_engine_name=ocr_engine_name)
+        return process_image_file(file_path, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name)
     if suffix in DOCX_EXTENSIONS:
-        return process_docx_file(file_path, session, ocr_engine_name=ocr_engine_name)
+        return process_docx_file(file_path, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name)
     if suffix in PDF_EXTENSIONS:
-        return process_pdf_file(file_path, session, ocr_engine_name=ocr_engine_name)
+        return process_pdf_file(file_path, session, ocr_engine_name=ocr_engine_name, ai_extractor_name=ai_extractor_name)
 
     raise ValueError(f"Unsupported file type: {suffix}")
 
@@ -551,12 +634,21 @@ def process_uploaded_files(
     text_input: str | None = None,
     employee_id: int | None = None,
     ocr_engine_name: str | None = None,
+    ai_extractor_name: str | None = None,
 ):
     files = files or []
     selected_ocr_engine = (ocr_engine_name or OCR_ENGINE).lower()
-    session = _create_upload_session()
-    print(f"[INFO] Upload session: {session.name} ({session.session_dir})")
-    print(f"[INFO] OCR engine: {selected_ocr_engine}")
+    if employee_id is not None:
+        from database import Employee
+
+        existing_employee = db.query(Employee).filter(Employee.id == employee_id).first()
+        if not existing_employee:
+            raise ValueError(f"Employee not found: {employee_id}")
+        session = _create_upload_session(_upload_root_for_existing_employee(existing_employee))
+    else:
+        session = _create_upload_session()
+    logger.info("Upload session: %s (%s)", session.name, session.session_dir)
+    logger.info("OCR engine: %s", selected_ocr_engine)
 
     all_results = []
     ocr_report_sections = []
@@ -573,6 +665,7 @@ def process_uploaded_files(
             saved_path,
             session,
             ocr_engine_name=selected_ocr_engine,
+            ai_extractor_name=ai_extractor_name,
         )
         all_results.append(result)
 
@@ -589,7 +682,7 @@ def process_uploaded_files(
         )
 
     if text_input and text_input.strip():
-        extractor = get_ai_extractor("local")
+        extractor = get_ai_extractor(ai_extractor_name or "local")
         extracted = extractor.extract_from_text(text_input, source_description="Pasted text")
         all_results.append({
             "source": "text_input",
@@ -605,18 +698,109 @@ def process_uploaded_files(
     if ocr_report_sections:
         report_path = session.session_dir / "ocr_report.txt"
         report_path.write_text("\n\n".join(ocr_report_sections), encoding="utf-8")
-        print(f"[INFO] OCR report saved: {report_path}")
+        logger.info("OCR report saved: %s", report_path)
 
-    merged = merge_extraction_results(all_results)
-    mapped = map_extracted_to_employee_fields(merged)
+    merged   = merge_extraction_results(all_results)
+    mapped   = map_extracted_to_employee_fields(merged)
     employee = save_employee_draft(db, mapped, employee_id=employee_id)
+
+    # Rename the anonymous upload_NNNN/ folder to the employee's named folder.
+    # Done AFTER extraction so we have both the employee ID and extracted name.
+    if employee_id is not None:
+        final_root_dir = session.session_dir.parent
+        final_session_dir = session.session_dir
+    else:
+        final_root_dir = _employee_root_dir(employee.id)
+        final_root_dir.mkdir(parents=True, exist_ok=True)
+        final_session_dir = final_root_dir / _next_upload_session_name(final_root_dir)
+        try:
+            session.session_dir.rename(final_session_dir)
+            logger.info("Upload session moved to employee root: %s", final_session_dir)
+        except OSError as exc:
+            logger.warning("Could not move upload session (%s); keeping temporary path", exc)
+            final_root_dir = session.session_dir.parent
+            final_session_dir = session.session_dir
+        session = _build_upload_session(final_session_dir)
+
+    new_name = session.name
+    new_dir  = session.session_dir
+
+    if new_dir == session.session_dir:
+        # Already the right name (shouldn't happen normally, but be safe)
+        final_dir = session.session_dir
+
+    elif not new_dir.exists():
+        # First upload: rename anonymous folder to named folder in one step
+        try:
+            session.session_dir.rename(new_dir)
+            final_dir = new_dir
+            logger.info("Upload folder created: %s", new_name)
+        except OSError as exc:
+            logger.warning("Could not rename upload folder (%s); keeping anonymous path", exc)
+            final_dir = session.session_dir
+
+    else:
+        # Re-upload: named folder already exists — merge new originals into it.
+        # This keeps all documents for the same employee in one place.
+        dest_originals = new_dir / "originals"
+        dest_originals.mkdir(exist_ok=True)
+        for src_file in session.originals_dir.iterdir():
+            dest = dest_originals / src_file.name
+            if dest.exists():
+                # Avoid collision: append a timestamp suffix
+                dest = dest_originals / f"{src_file.stem}_{int(src_file.stat().st_mtime)}{src_file.suffix}"
+            shutil.move(str(src_file), str(dest))
+        # Clean up the now-empty anonymous session folder
+        try:
+            shutil.rmtree(session.session_dir)
+        except OSError:
+            pass
+        final_dir = new_dir
+        logger.info("Re-upload: merged originals into %s", new_name)
+
+    # Persist the upload root plus latest session. New uploads stay isolated.
+    employee.upload_session_dir = str(final_root_dir)
+    employee.latest_upload_session_dir = str(final_session_dir)
+    db.commit()
+    db.refresh(employee)
+
+    # Auto-collect: smart-crop all document images and merge into a single Word file.
+    # Wrapped in try/except — a failure here never breaks the upload.
+    collection = {}
+    try:
+        from contracts.document_collector import collect_and_export
+        collection = collect_and_export(employee)
+        if collection.get("docx_path"):
+            employee.collected_docs_docx = collection["docx_path"]
+            db.commit()
+            logger.info(
+                "Document pack created: %s (%d images)",
+                collection["slug"], collection["image_count"],
+            )
+    except Exception as exc:
+        logger.warning("Document collection skipped (non-fatal): %s", exc)
+
+    try:
+        manifest_path = _write_upload_manifest(
+            session,
+            employee,
+            selected_ocr_engine=selected_ocr_engine,
+            selected_ai_extractor=ai_extractor_name,
+            all_results=all_results,
+            mapped=mapped,
+            collection=collection,
+        )
+        logger.info("Upload manifest saved: %s", manifest_path)
+    except Exception as exc:
+        logger.warning("Upload manifest skipped (non-fatal): %s", exc)
 
     return {
         "employee_id": employee.id,
-        "employee": employee,
-        "session_name": session.name,
-        "session_dir": str(session.session_dir),
-        "results": all_results,
-        "merged_data": merged,
-        "mapped_data": mapped,
+        "employee":    employee,
+        "session_name": new_name,
+        "session_dir":  str(final_session_dir),
+        "upload_root_dir": str(final_root_dir),
+        "results":      all_results,
+        "merged_data":  merged,
+        "mapped_data":  mapped,
     }

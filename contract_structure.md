@@ -32,20 +32,22 @@ contracts/
 │           └── ASN_AV_berlin_<role>_unbefristet_ghb_40.docx
 │
 ├── koeln_group/
-│   ├── bergisch_gladbach/             ← befristet only, flat folder
-│   │   └── ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
-│   ├── duesseldorf/                   ← unbefristet only, flat folder
-│   │   └── DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│   ├── bergisch_gladbach/
+│   │   └── befristet/
+│   │       └── ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
+│   ├── duesseldorf/
+│   │   └── unbefristet/
+│   │       └── ASN_AV_duesseldorf_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
 │   ├── frankfurt/
-│   │   ├── Vorlagen Befristet/
-│   │   │   └── FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx
-│   │   └── Vorlagen Unbefristet AV/
-│   │       └── MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│   │   ├── befristet/
+│   │   │   └── ASN_AV_frankfurt_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
+│   │   └── unbefristet/
+│   │       └── ASN_AV_frankfurt_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
 │   └── hamburg/
-│       ├── Vorlagen Befristet/
-│       │   └── HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx
-│       └── Vorlagen Unbefristet AV/
-│           └── MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx
+│       ├── befristet/
+│       │   └── ASN_AV_hamburg_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
+│       └── unbefristet/
+│           └── ASN_AV_hamburg_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx
 │
 └── wien/                              ← flat folder, all effectively unbefristet
     └── ASN_AV_wien_<Role>_<hours>_Std[_<days>_Tage_<daily>_Std].docx
@@ -78,7 +80,6 @@ bergisch gladbach        bergisch_gladbach      ↑ (same)
 düsseldorf / duesseldorf duesseldorf            ↑
 frankfurt                frankfurt              ↑
 hamburg                  hamburg                ↑
-münchen / muenchen       muenchen               ↑
 wien / vienna            wien                 resolve_wien_template()
 ```
 
@@ -117,9 +118,9 @@ Roles: `floor_supervisor`, `glasreiniger`, `hausmann`, `hsk`, `minibar`, `nr`, `
 
 ## Koeln Group Templates
 
-Cities: `bergisch_gladbach`, `duesseldorf`, `frankfurt`, `hamburg`, `muenchen`
+Cities: `bergisch_gladbach`, `duesseldorf`, `frankfurt`, `hamburg`
 
-### Bergisch Gladbach — `contracts/koeln_group/bergisch_gladbach/`
+### Bergisch Gladbach — `contracts/koeln_group/bergisch_gladbach/befristet/`
 
 Naming: `ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
 
@@ -130,27 +131,27 @@ Naming: `ASN_AV_bergisch_gladbach_<role>_befristet_<hours>_Std_<days>_Tage_<dail
 | `hausmann` | 40/5/8 |
 | `nr` | 40/5/8 |
 
-### Düsseldorf — `contracts/koeln_group/duesseldorf/`
+### Düsseldorf — `contracts/koeln_group/duesseldorf/unbefristet/`
 
-`DUS_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
+`ASN_AV_duesseldorf_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
 
 Roles: `nr` (token `NR`), `stw` (token `STW`)
 
 ### Frankfurt — `contracts/koeln_group/frankfurt/`
 
-- Befristet (`Vorlagen Befristet/`): `FRA_AV_<role>_BEFRISTET_40 Std_NEU.docx`
-  - Roles: `nr` (`NR`), `public_area` (`PA-BOH`)
-- Unbefristet (`Vorlagen Unbefristet AV/`): `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
-  - Roles: `hausmann` (`HM-WM`), `hsk` (`HSK`), `nr` (`NR`), `public_area` (`PA-BOH`), `stw` (`STW`), `hsk_supervisor` (`SV`)
+- Befristet (`befristet/`): `ASN_AV_frankfurt_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
+  - Roles: `nr`, `public_area`
+- Unbefristet (`unbefristet/`): `ASN_AV_frankfurt_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
+  - Roles: `back_of_house_manager`, `hausmann`, `hsk`, `minibar`, `nr`, `public_area`, `stw`, `supervisor`
 
 ### Hamburg — `contracts/koeln_group/hamburg/`
 
-- Befristet (`Vorlagen Befristet/`): `HAM_AV_<role>_BEFRISTET_40 Std_NEU.docx`
-  - Roles: `nr` (`NR`), `public_area` (`PA-BOH`)
-- Unbefristet (`Vorlagen Unbefristet AV/`): `MUC_AV_<role>_UNBEFRISTET_40 Std_NEU.docx`
+- Befristet (`befristet/`): `ASN_AV_hamburg_<role>_befristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
+  - Roles: `nr`, `public_area`
+- Unbefristet (`unbefristet/`): `ASN_AV_hamburg_<role>_unbefristet_<hours>_Std_<days>_Tage_<daily>_Std.docx`
   - Same roles as Frankfurt unbefristet.
 
-> Role token map for koeln_group: `hausmann → HM-WM`, `hsk → HSK`, `hsk_supervisor → HSK SUPERVISOR`, `nr → NR`, `public_area → PA-BOH`, `stw → STW`.
+> Koeln-group role names are canonical resolver occupation codes, matching Berlin-style lowercase tokens.
 
 ---
 
@@ -250,4 +251,4 @@ These Jinja variables are available in all `.docx` templates (populated from the
 1. Drop the `.docx` file in the correct city/type folder following the naming convention for that city.
 2. If the role is new, add an entry to `OCCUPATION_ALIASES` in `resolver.py`.
 3. For Wien roles with multiple hour variants, add the schedule to `CITY_ROLE_SCHEDULE_RULES["wien"]`.
-4. Add the role token to the relevant `_WIEN_ROLE_TOKEN`, `_BERLIN_ROLE_TOKEN`, or `_KOELN_GROUP_ROLE_TOKEN` map in `resolver.py`.
+4. Add the role token to the relevant `_WIEN_ROLE_TOKEN` or `_BERLIN_ROLE_TOKEN` map in `resolver.py`. Koeln-group filenames use the canonical `occupation_code` directly.

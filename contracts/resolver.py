@@ -13,7 +13,6 @@ Internal flow:
 """
 
 import re
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -128,19 +127,6 @@ _BERLIN_ROLE_TOKEN: Dict[str, Dict[str, Optional[str]]] = {
     "reinigungskraft":  {"befristet": "REINIGUNGSKRAFT",  "unbefristet": None},
 }
 
-# Köln group: one token per occupation, shared across all Köln-group cities
-_KOELN_GROUP_ROLE_TOKEN: Dict[str, str] = {
-    "hausmann":              "HM-WM",
-    "hsk":                   "HSK",
-    "hsk_supervisor":        "HSK SUPERVISOR",
-    "nr":                    "NR",
-    "minibar":               "MB",
-    "stw":                   "STW",
-    "supervisor":            "SV",
-    "public_area":           "PA-BOH",
-    "back_of_house_manager": "Back of House Manager",
-}
-
 # Wien: token encodes the exact variant used in filenames
 _WIEN_ROLE_TOKEN: Dict[str, str] = {
     "reinigungskraft":        "Reinigungskraft_TD",  # no plain variant; TD template covers it
@@ -163,31 +149,18 @@ _WIEN_ROLE_TOKEN: Dict[str, str] = {
 # ─────────────────────────────────────────────────────────────────────────────
 # Köln-group routing table
 # ─────────────────────────────────────────────────────────────────────────────
-# Maps city → contract_type → (sub-folder, file prefix, type token in filename).
-# Bergisch Gladbach has a different filename scheme so is handled separately.
-
-@dataclass(frozen=True)
-class _KoelnRoute:
-    folder:     str  # path relative to contracts/koeln_group/<city>/  ("." = city root)
-    prefix:     str  # filename prefix:  FRA_AV, MUC_AV, DUS_AV, HAM_AV
-    type_token: str  # BEFRISTET or UNBEFRISTET as it appears in the filename
-
-_KOELN_ROUTING: Dict[str, Dict[str, _KoelnRoute]] = {
-    "duesseldorf": {
-        "unbefristet": _KoelnRoute(".",                       "DUS_AV", "UNBEFRISTET"),
-    },
-    "frankfurt": {
-        "befristet":   _KoelnRoute("befristet",               "FRA_AV", "BEFRISTET"),
-        "unbefristet": _KoelnRoute("unbefristet",             "MUC_AV", "UNBEFRISTET"),
-    },
-    "hamburg": {
-        "befristet":   _KoelnRoute("Vorlagen Befristet",      "HAM_AV", "BEFRISTET"),
-        "unbefristet": _KoelnRoute("Vorlagen Unbefristet AV", "MUC_AV", "UNBEFRISTET"),
-    },
+# Koeln-group templates use one normalized structure:
+# contracts/koeln_group/<city>/<contract_type>/
+# ASN_AV_<city>_<occupation>_<contract_type>_<hours>_Std_<days>_Tage_<daily>_Std.docx
+_KOELN_GROUP_CONTRACT_TYPES: Dict[str, frozenset[str]] = {
+    "bergisch_gladbach": frozenset({"befristet"}),
+    "duesseldorf":       frozenset({"unbefristet"}),
+    "frankfurt":         frozenset({"befristet", "unbefristet"}),
+    "hamburg":           frozenset({"befristet", "unbefristet"}),
 }
 
 # Cities that route through resolve_koeln_group_template
-KOELN_GROUP_CITIES: frozenset = frozenset(_KOELN_ROUTING.keys() | {"bergisch_gladbach"})
+KOELN_GROUP_CITIES: frozenset = frozenset(_KOELN_GROUP_CONTRACT_TYPES.keys())
 
 # Berlin unbefristet: hotel/group → folder name
 _BERLIN_UNBEFRISTET_FOLDER: Dict[str, str] = {
@@ -481,6 +454,14 @@ def _require(value: Any, field: str) -> Any:
         raise ValueError(f"'{field}' is required to resolve a contract template")
     return value
 
+
+def _schedule_number_token(value: Any) -> str:
+    """Format schedule numbers for template filenames without trailing .0."""
+    number = float(value)
+    if number.is_integer():
+        return str(int(number))
+    return str(number).replace(".", "_")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # City-specific resolvers
 # ─────────────────────────────────────────────────────────────────────────────
@@ -527,44 +508,40 @@ def resolve_koeln_group_template(attrs: Dict[str, Any]) -> Path:
     city          = _require(attrs["city_code"],          "city")
     occupation    = _require(attrs["occupation_code"],    "occupation")
     weekly_hours  = _require(attrs["weekly_hours"],       "weekly_hours")
+    days_per_week = _require(attrs["days_per_week"],      "work_days_per_week")
+    daily_hours   = _require(attrs["daily_hours"],        "daily_hours")
     contract_type = attrs.get("contract_type_code") or "befristet"
 
     if city not in KOELN_GROUP_CITIES:
         raise ValueError(f"'{city}' is not a Köln-group city")
 
-    hours_token = f"{weekly_hours} Std"
-    city_root   = CONTRACTS_DIR / "koeln_group" / city
-
-    # ── Bergisch Gladbach ──────────────────────────────────────────────────────
-    # All contracts are befristet; files sit directly in the city root.
-    # Filename pattern: ASN_AV_bergisch_gladbach_{occupation}_befristet_{hours}...docx
-    if city == "bergisch_gladbach":
-        return _pick_by_contains(
-            city_root,
-            ["ASN_AV_bergisch_gladbach", occupation, "befristet", hours_token],
-        )
-
-    # ── All other Köln-group cities: routing table ─────────────────────────────
-    role_token = _KOELN_GROUP_ROLE_TOKEN.get(occupation)
-    if role_token is None:
-        raise ValueError(f"No template mapping for occupation '{occupation}' in {city}")
-
-    city_routes = _KOELN_ROUTING.get(city)
-    if city_routes is None:
-        raise ValueError(f"No routing configuration for Köln-group city '{city}'")
-
-    route = city_routes.get(contract_type)
-    if route is None:
-        available = list(city_routes.keys())
+    available_types = _KOELN_GROUP_CONTRACT_TYPES[city]
+    if contract_type not in available_types:
         raise ValueError(
             f"'{contract_type}' contracts are not available for {city}. "
-            f"Available types: {available}"
+            f"Available types: {sorted(available_types)}"
         )
 
-    base_dir = city_root if route.folder == "." else city_root / route.folder
-    return _pick_by_contains(
-        base_dir,
-        [route.prefix, role_token, route.type_token, hours_token],
+    schedule_suffix = (
+        f"{_schedule_number_token(weekly_hours)}_Std_"
+        f"{_schedule_number_token(days_per_week)}_Tage_"
+        f"{_schedule_number_token(daily_hours)}_Std"
+    )
+    filename = f"ASN_AV_{city}_{occupation}_{contract_type}_{schedule_suffix}.docx"
+    template_path = CONTRACTS_DIR / "koeln_group" / city / contract_type / filename
+
+    if template_path.exists():
+        return template_path
+
+    template_dir = template_path.parent
+    listed = "\n".join(
+        f"  {p.name}"
+        for p in sorted(template_dir.glob("*.docx"))
+        if not p.name.startswith("~$")
+    )
+    raise FileNotFoundError(
+        f"No Koeln-group template found: {template_path}\n"
+        f"  checked:\n{listed or '  (none)'}"
     )
 
 

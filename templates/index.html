@@ -112,8 +112,8 @@
         .btn-preview:hover { background: var(--primary); }
 
 
-        .btn-delete   { background: var(--primary-dk); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
-        .btn-preview:hover { background: var(--primary); }
+        .btn-delete   { background: #c0392b; color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
+        .btn-delete:hover { background: #922b21; }
 
         .btn-review    { background: var(--primary); color: #fff; font-size: 13px; padding: 6px 13px; border-radius: 6px; }
         .btn-review:hover { background: var(--primary-dk); }
@@ -216,16 +216,16 @@
 
 <body>
     <div class="top-bar">
-        <h1>Employee Onboarding Dashboard</h1>
+        <h1>Mitarbeiter-Onboarding-Dashboard</h1>
         <div class="top-actions">
-            <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
-            <a href="/upload" class="btn btn-primary">+ New Employee</a>
+            <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dunkel</button>
+            <a href="/upload" class="btn btn-primary">+ Neuer Mitarbeiter</a>
         </div>
     </div>
 
     <div class="stats-bar">
         <div class="stat-card">
-            <div class="stat-label">Total Employees</div>
+            <div class="stat-label">Gesamtzahl der Mitarbeiter</div>
             <div class="stat-value">{{ employees|length }}</div>
         </div>
     </div>
@@ -235,19 +235,19 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Name</th>
-                    <th>City</th>
+                    <th>Stadt</th>
                     <th>Email</th>
                     <th>Status</th>
-                    <th>Created At</th>
-                    <th>Actions</th>
+                    <th>Erstellt am</th>
+                    <th>Aktionen</th>
                 </tr>
             </thead>
             <tbody>
                 {% for employee in employees %}
                 <tr>
-                    <td><span class="employee-id">#{{ employee.id }}</span></td>
+                    <td><span class="employee-id">{{ loop.index }}</span></td>
                     <td><span class="employee-name">{{ employee.first_name or '' }} {{ employee.last_name or '' }}</span></td>
                     <td>{{ employee.city or '' }}</td>
                     <td>{{ employee.email or '' }}</td>
@@ -265,7 +265,7 @@
                                 <button
                                     type= "submit"
                                     class= "btn btn-delete"
-                                    onclick="return confirm('Are you sure you want to delete this employee: {{employee.first_name}} {{employee.last_name}}?');">
+                                    onclick="return confirm('Möchten Sie diesen Mitarbeiter wirklich löschen: {{employee.first_name}} {{employee.last_name}}?');">
                                     Löschen
                                 </button>
                             </form>
@@ -280,13 +280,14 @@
     {% else %}
     
     <div class="not-found">
-        No employees found. Click <strong>"+ New Employee"</strong> to get started.
+        Keine Mitarbeiter gefunden. Klicken Sie auf <strong>„+ Neuer Mitarbeiter"</strong>, um zu beginnen.
     </div>
     {% endif %}
 
     <div class="bottom-bar">
-        <a href="/audit-logs" class="btn btn-audit">Audit Logs</a>
-        <a href="/upload" class="btn btn-secondary">+ New Employee</a>
+        <a href="/audit-logs" class="btn btn-audit">Audit-Protokolle</a>
+        <a href="/logs" class="btn btn-secondary">📋 Protokolle</a>
+        <a href="/upload" class="btn btn-secondary">+ Neuer Mitarbeiter</a>
     </div>
 
     <script>
@@ -294,7 +295,7 @@
         function applyDim(on) {
             document.body.classList.toggle('dim', on);
             const btn = document.getElementById('dimToggle');
-            if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+            if (btn) btn.textContent = on ? '☀ Hell' : '🌙 Dunkel';
         }
 
         function toggleDim() {

@@ -65,7 +65,7 @@ class LocalOllamaVerifier:
                 "stream": False,
                 "format":"json",
             },
-            timeout=180,
+            timeout=None,
         )
         response.raise_for_status()
         result = response.json()

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:         #f7f3ed;
+            --surface:    #fdfaf6;
+            --card:       #fffdf9;
+            --border:     #e8ddd0;
+            --primary:    #7c4a1e;
+            --primary-dk: #5c3414;
+            --accent:     #c4822a;
+            --accent-sf:  #fdf0e0;
+            --text:       #2c1f14;
+            --muted:      #9c8a78;
+            --thead:      #6b3c18;
+            --shadow:     rgba(100,60,20,0.10);
+            --ok:         #276336;
+            --ok-bg:      #e6f4ea;
+        }
+
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); padding: 28px 32px 80px; color: var(--text); }
+
+        .top-bar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+        .top-bar h1 { color: var(--primary); font-size: 1.5rem; font-weight: 700; }
+        .back-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 7px; font-size: 14px; font-weight: 600;
+            text-decoration: none; background: var(--card); color: var(--primary);
+            border: 1.5px solid var(--border); transition: background 0.18s;
+        }
+        .back-btn:hover { background: var(--accent-sf); }
+
+        .section { margin-bottom: 32px; }
+        .section-title {
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.6px; color: var(--muted); margin-bottom: 12px;
+        }
+
+        /* ── Upload log table ── */
+        .table-card {
+            background: var(--card); border-radius: 12px;
+            box-shadow: 0 1px 6px var(--shadow); border: 1px solid var(--border); overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--thead); }
+        th { padding: 11px 16px; text-align: left; color: #f5e8d8; font-size: 13px; font-weight: 600; }
+        td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: #fdf4e9; }
+
+        .time-badge {
+            display: inline-block; padding: 2px 9px; border-radius: 12px;
+            font-size: 12px; font-weight: 600;
+            background: var(--ok-bg); color: var(--ok);
+        }
+        .time-badge.slow { background: #fef3c7; color: #92560a; }
+        .time-badge.very-slow { background: #fee2e2; color: #991b1b; }
+
+        .empty { padding: 32px; text-align: center; color: var(--muted); font-size: 14px; }
+
+        /* ── Error log ── */
+        details { background: var(--card); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+        summary {
+            padding: 14px 18px; font-size: 14px; font-weight: 600;
+            color: var(--primary); cursor: pointer; list-style: none;
+            display: flex; align-items: center; gap: 8px;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::before { content: '▶'; font-size: 10px; transition: transform 0.2s; }
+        details[open] summary::before { transform: rotate(90deg); }
+        summary:hover { background: var(--accent-sf); }
+
+        pre {
+            margin: 0; padding: 16px 18px;
+            font-size: 12px; line-height: 1.6;
+            background: #1e1510; color: #e8d8c0;
+            overflow-x: auto; max-height: 400px; overflow-y: auto;
+            white-space: pre-wrap; word-break: break-all;
+            border-top: 1px solid var(--border);
+        }
+        .no-errors { padding: 16px 18px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); }
+
+        /* ── Bottom bar ── */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(253,250,246,0.94); backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border); padding: 12px 32px;
+            display: flex; justify-content: flex-end; gap: 10px; z-index: 100;
+        }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 7px; font-size: 14px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; }
+        .btn-secondary { background: var(--card); color: var(--primary); border: 1.5px solid var(--border); }
+        .btn-secondary:hover { background: var(--accent-sf); }
+        .btn-audit { background: var(--primary-dk); color: #fff; }
+        .btn-audit:hover { background: var(--primary); }
+
+        /* ── Dim mode ── */
+        body.dim {
+            --bg:         #2a1f16;
+            --surface:    #32261a;
+            --card:       #3a2c1e;
+            --border:     #52402e;
+            --primary:    #d4a060;
+            --primary-dk: #b8843a;
+            --accent:     #e0a84a;
+            --accent-sf:  #4a3420;
+            --text:       #f0e6d8;
+            --muted:      #a89070;
+            --thead:      #4a3020;
+            --shadow:     rgba(0,0,0,0.30);
+            --ok:         #4caf7a;
+            --ok-bg:      #1a3a22;
+            filter: brightness(0.96);
+        }
+        body.dim pre { background: #0e0a06; color: #d8c8a8; }
+
+        .dim-toggle {
+            background: var(--accent-sf);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s;
+            white-space: nowrap;
+        }
+        .dim-toggle:hover { background: var(--border); }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="/" class="back-btn">← Back</a>
+        <h1>System Logs</h1>
+        <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
+    </div>
+
+    <!-- Upload performance log -->
+    <div class="section">
+        <div class="section-title">Upload History ({{ upload_rows|length }} runs)</div>
+        <div class="table-card">
+            {% if upload_rows %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date &amp; Time</th>
+                        <th>Files</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in upload_rows %}
+                    <tr>
+                        <td style="color:var(--muted);font-size:12px">{{ loop.index }}</td>
+                        <td>{{ row.Date }}</td>
+                        <td>{{ row.Files }}</td>
+                        <td>
+                            {% set mins = row.Time | float %}
+                            <span class="time-badge{% if mins > 5 %} very-slow{% elif mins > 2 %} slow{% endif %}">
+                                {{ "%.2f"|format(mins) }} min
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty">No upload history yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Server error log -->
+    <div class="section">
+        <details>
+            <summary>Server Error Log (last 100 lines)</summary>
+            {% if error_lines %}
+            <pre>{{ error_lines | join('\n') }}</pre>
+            {% else %}
+            <div class="no-errors">No error log found or log is empty.</div>
+            {% endif %}
+        </details>
+    </div>
+
+    <div class="bottom-bar">
+        <a href="/audit-logs" class="btn btn-audit">Audit Logs</a>
+        <a href="/" class="btn btn-secondary">← Dashboard</a>
+    </div>
+    <script>
+        function applyDim(on) {
+            document.body.classList.toggle('dim', on);
+            const btn = document.getElementById('dimToggle');
+            if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+        }
+        function toggleDim() {
+            const next = !document.body.classList.contains('dim');
+            localStorage.setItem('dimMode', next ? '1' : '0');
+            applyDim(next);
+        }
+        applyDim(localStorage.getItem('dimMode') === '1');
+    </script>
+</body>
+</html>

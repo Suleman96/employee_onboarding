@@ -5,116 +5,236 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audit Logs</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Warm palette (matches index.html) ── */
+        :root {
+            --bg:          #f7f3ed;
+            --surface:     #fdfaf6;
+            --card:        #fffdf9;
+            --border:      #e8ddd0;
+            --primary:     #7c4a1e;
+            --primary-dk:  #5c3414;
+            --accent:      #c4822a;
+            --accent-soft: #fdf0e0;
+            --text:        #2c1f14;
+            --text-muted:  #9c8a78;
+            --thead-bg:    #6b3c18;
+            --row-hover:   #fdf4e9;
+            --shadow:      rgba(100,60,20,0.10);
+        }
+
+        /* ── Dim mode ── */
+        body.dim {
+            --bg:          #2a1f16;
+            --surface:     #32261a;
+            --card:        #3a2c1e;
+            --border:      #52402e;
+            --primary:     #d4a060;
+            --primary-dk:  #b8843a;
+            --accent:      #e0a84a;
+            --accent-soft: #4a3420;
+            --text:        #f0e6d8;
+            --text-muted:  #a89070;
+            --thead-bg:    #4a3020;
+            --row-hover:   #42301e;
+            --shadow:      rgba(0,0,0,0.30);
+            filter: brightness(0.95);
+        }
+
         body {
-            font-family: "Segoe UI", sans-serif;
-            background: #f4f6fa;
-            color: #1f2937;
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 28px 32px 80px;
+            transition: background 0.3s, color 0.3s, filter 0.3s;
         }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        .header {
+
+        /* ── Top bar ── */
+        .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 28px;
         }
-        .header h1 {
-            margin: 0;
-            font-size: 1.6rem;
-        }
-        .header a {
-            color: #1a3a5c;
-            text-decoration: none;
+
+        h1 { color: var(--primary); font-size: 1.5rem; font-weight: 700; }
+
+        .top-actions { display: flex; gap: 10px; align-items: center; }
+
+        /* ── Dim toggle ── */
+        .dim-toggle {
+            background: var(--accent-soft);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
             font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s;
+            white-space: nowrap;
         }
-        .header a:hover {
-            text-decoration: underline;
+        .dim-toggle:hover { background: var(--border); }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 9px 18px; border-radius: 7px;
+            font-size: 14px; font-weight: 600;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: background 0.18s, transform 0.12s;
         }
+        .btn:hover { transform: translateY(-1px); }
+        .btn-secondary { background: var(--card); color: var(--primary); border: 1.5px solid var(--border); }
+        .btn-secondary:hover { background: var(--accent-soft); }
+        .btn-audit { background: var(--primary-dk); color: #fff; }
+        .btn-audit:hover { background: var(--primary); }
+
+        /* ── Table ── */
         .table-wrapper {
-            overflow-x: auto;
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
-            padding: 1rem;
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 6px var(--shadow);
+            overflow: hidden;
+            border: 1px solid var(--border);
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 760px;
-        }
-        th, td {
-            text-align: left;
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--thead-bg); }
         th {
-            background: #eef2ff;
-            color: #1f2937;
+            padding: 12px 16px;
+            text-align: left;
+            color: #f5e8d8;
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
-            font-size: 0.82rem;
+            letter-spacing: 0.4px;
         }
-        tr:last-child td {
-            border-bottom: none;
+        td {
+            padding: 11px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            color: var(--text);
+            vertical-align: top;
         }
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            background: #e0f2fe;
-            color: #0369a1;
-            border-radius: 9999px;
-            padding: 0.3rem 0.75rem;
-            font-size: 0.78rem;
-            font-weight: 600;
+        tr:last-child td { border-bottom: none; }
+        tbody tr:hover td { background: var(--row-hover); }
+
+        /* ── Action badge ── */
+        .action-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--accent-soft);
+            color: var(--primary);
+            white-space: nowrap;
         }
+        .action-badge.create  { background: #e6f4ea; color: #276336; }
+        .action-badge.update  { background: #fef3c7; color: #92560a; }
+        .action-badge.delete  { background: #fde8e8; color: #c0392b; }
+        .action-badge.approve { background: #e6f4ea; color: #276336; }
+        .action-badge.reject  { background: #fde8e8; color: #c0392b; }
+
+        /* ── Details cell ── */
+        .details-cell {
+            max-width: 380px;
+            font-size: 12px;
+            color: var(--text-muted);
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        /* ── Empty state ── */
         .empty {
-            padding: 2rem;
+            padding: 40px;
             text-align: center;
-            color: #4b5563;
+            color: var(--text-muted);
+            font-size: 15px;
         }
+
+        /* ── Bottom bar ── */
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(253,250,246,0.94);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border);
+            padding: 12px 32px;
+            display: flex; justify-content: flex-end; gap: 10px;
+            z-index: 100;
+        }
+        body.dim .bottom-bar { background: rgba(50,38,26,0.94); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Audit Logs</h1>
-            <a href="/">← Back to Dashboard</a>
-        </div>
-
-        <div class="table-wrapper">
-            {% if logs %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Action</th>
-                            <th>Employee ID</th>
-                            <th>Performed By</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for log in logs %}
-                        <tr>
-                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '—' }}</td>
-                            <td>{{ log.action or '—' }}</td>
-                            <td>{{ log.employee_id or '—' }}</td>
-                            <td>{{ log.performed_by or '—' }}</td>
-                            <td>{{ log.details or '—' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <div class="empty">No audit logs were found.</div>
-            {% endif %}
+    <div class="top-bar">
+        <h1>Audit Logs</h1>
+        <div class="top-actions">
+            <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
+            <a href="/" class="btn btn-secondary">← Dashboard</a>
         </div>
     </div>
+
+    <div class="table-wrapper">
+        {% if logs %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>Employee ID</th>
+                    <th>Performed By</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="white-space:nowrap;font-size:12px;color:var(--text-muted)">
+                        {{ log.timestamp.strftime('%d.%m.%Y %H:%M:%S') if log.timestamp else '—' }}
+                    </td>
+                    <td>
+                        <span class="action-badge {{ log.action.split('_')[0] if log.action else '' }}">
+                            {{ (log.action or '—') | replace('_', ' ') }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.employee_id %}
+                        <a href="/review/{{ log.employee_id }}" style="color:var(--primary);font-weight:600;text-decoration:none;">
+                            #{{ log.employee_id }}
+                        </a>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td style="font-size:12px;">{{ log.performed_by or '—' }}</td>
+                    <td class="details-cell">{{ log.details or '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty">No audit logs found.</div>
+        {% endif %}
+    </div>
+
+    <div class="bottom-bar">
+        <a href="/logs" class="btn btn-secondary">📋 Logs</a>
+        <a href="/" class="btn btn-audit">← Dashboard</a>
+    </div>
+
+    <script>
+        function applyDim(on) {
+            document.body.classList.toggle('dim', on);
+            const btn = document.getElementById('dimToggle');
+            if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+        }
+        function toggleDim() {
+            const next = !document.body.classList.contains('dim');
+            localStorage.setItem('dimMode', next ? '1' : '0');
+            applyDim(next);
+        }
+        applyDim(localStorage.getItem('dimMode') === '1');
+    </script>
 </body>
 </html>

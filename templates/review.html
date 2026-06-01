@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
-    <title>Employee Record Review</title>
+    <title>{{ employee.first_name or '' }} {{ employee.last_name or '' }} — Review</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ── Reset ── */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ── Warm palette ── */
+        /* ── Warm palette (matches index.html) ── */
         :root {
             --bg:          #f7f3ed;
             --surface:     #fdfaf6;
@@ -19,12 +20,14 @@
             --accent-soft: #fdf0e0;
             --text:        #2c1f14;
             --text-muted:  #9c8a78;
-            --header-bg1:  #5c3414;
-            --header-bg2:  #8a5228;
-            --header-line: #c4822a;
-            --footer-bg:   #fdfaf6;
             --shadow:      rgba(100,60,20,0.10);
-            --radius:      10px;
+            --danger:      #c0392b;
+            --danger-dk:   #922b21;
+            --danger-soft: #fde8e8;
+            --ok:          #276336;
+            --ok-bg:       #e6f4ea;
+            --warn:        #92560a;
+            --warn-bg:     #fef3c7;
         }
 
         /* ── Dim mode ── */
@@ -39,16 +42,15 @@
             --accent-soft: #4a3420;
             --text:        #f0e6d8;
             --text-muted:  #a89070;
-            --header-bg1:  #3a2410;
-            --header-bg2:  #5a3818;
-            --header-line: #c4822a;
-            --footer-bg:   #32261a;
             --shadow:      rgba(0,0,0,0.35);
+            --danger-soft: #4a1a1a;
+            --ok-bg:       #1a3a20;
+            --warn-bg:     #3a2a10;
             filter: brightness(0.96);
         }
 
         body {
-            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
@@ -56,18 +58,11 @@
         }
 
         /* ── Shell ── */
-        .container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            max-width: 100%;
-            background: var(--surface);
-            box-shadow: 0 0 0 1px var(--border), 0 8px 40px var(--shadow);
-        }
+        .container { display: flex; flex-direction: column; min-height: 100vh; }
 
         /* ── Header ── */
         .header {
-            background: linear-gradient(120deg, var(--header-bg1) 0%, var(--header-bg2) 100%);
+            background: linear-gradient(120deg, var(--primary-dk) 0%, var(--primary) 100%);
             color: #f5e8d8;
             padding: 14px 28px;
             display: flex;
@@ -75,42 +70,52 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            border-bottom: 3px solid var(--header-line);
+            border-bottom: 3px solid var(--accent);
             position: sticky;
             top: 0;
             z-index: 50;
         }
 
-        .header h1 {
-            font-size: clamp(1.1rem, 2.2vw, 1.35rem);
-            font-weight: 700;
-            letter-spacing: -0.2px;
-        }
+        .header h1 { font-size: clamp(1rem, 2.2vw, 1.3rem); font-weight: 700; letter-spacing: -0.2px; }
+        .header h1 a { color: inherit; text-decoration: none; opacity: 0.9; }
+        .header h1 a:hover { opacity: 1; }
 
-        .header .title-link {
-            color: inherit;
-            text-decoration: none;
-            opacity: 0.92;
-            transition: opacity 0.15s;
-        }
-        .header .title-link:hover { opacity: 1; }
+        .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .header .emp-id {
+        .emp-id {
             font-size: 0.8rem;
             background: rgba(255,255,255,0.12);
             border: 1px solid rgba(255,255,255,0.22);
             padding: 5px 12px;
             border-radius: 20px;
             font-weight: 600;
-            letter-spacing: 0.3px;
         }
+
+        /* ── Alert banners ── */
+        .alert {
+            padding: 10px 16px;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+        .alert-error   { background: var(--danger-soft); color: var(--danger-dk); border-color: #f5c6c6; }
+        .alert-success { background: var(--ok-bg);       color: var(--ok);        border-color: #b7dfbf; }
+
+        /* ── Status badge ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 11px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            letter-spacing: 0.2px;
+        }
+        .badge-draft        { background: var(--accent-soft); color: var(--primary); }
+        .badge-under_review { background: var(--warn-bg);     color: var(--warn); }
+        .badge-approved     { background: var(--ok-bg);       color: var(--ok); }
+        .badge-rejected     { background: var(--danger-soft); color: var(--danger-dk); }
 
         /* ── Dim toggle ── */
         .dim-toggle {
@@ -127,29 +132,20 @@
         }
         .dim-toggle:hover { background: rgba(255,255,255,0.22); }
 
-        /* ── Alert banners ── */
-        .header [style*="fee2e2"],
-        .header [style*="dcfce7"] {
-            border-radius: 7px !important;
-            font-size: 0.82rem !important;
-            margin-bottom: 0 !important;
-        }
-
         /* ── Content grid ── */
         .content {
-            padding: 24px 28px;
+            padding: 24px 28px 100px;
             flex: 1;
-            overflow-y: auto;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
             gap: 16px;
-            background: var(--bg);
+            align-items: start;
         }
 
         /* ── Info cards ── */
         .info-card {
             background: var(--card);
-            border-radius: var(--radius);
+            border-radius: 10px;
             border: 1px solid var(--border);
             padding: 16px 18px;
             box-shadow: 0 1px 4px var(--shadow);
@@ -160,12 +156,25 @@
             transform: translateY(-1px);
         }
 
+        /* colour strip per card */
+        .info-card:nth-child(1)  { border-top: 3px solid #c4822a; }
+        .info-card:nth-child(2)  { border-top: 3px solid #7a9e50; }
+        .info-card:nth-child(3)  { border-top: 3px solid #4a9e9a; }
+        .info-card:nth-child(4)  { border-top: 3px solid #d4aa30; }
+        .info-card:nth-child(5)  { border-top: 3px solid #c0503a; }
+        .info-card:nth-child(6)  { border-top: 3px solid #9a6ab0; }
+        .info-card:nth-child(7)  { border-top: 3px solid #7a6ab0; }
+        .info-card:nth-child(8)  { border-top: 3px solid #d47030; }
+        .info-card:nth-child(9)  { border-top: 3px solid #c05870; }
+        .info-card:nth-child(10) { border-top: 3px solid #5a9e6a; }
+        .info-card:nth-child(11) { border-top: 3px solid #4a7ab0; }
+
         .info-card h3 {
             display: flex;
             align-items: center;
             gap: 7px;
             color: var(--primary);
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
@@ -174,25 +183,14 @@
             border-bottom: 2px solid var(--accent-soft);
         }
 
-        /* warm-toned top strip per card */
-        .info-card:nth-child(1) { border-top: 3px solid #c4822a; }
-        .info-card:nth-child(2) { border-top: 3px solid #7a9e50; }
-        .info-card:nth-child(3) { border-top: 3px solid #d4aa30; }
-        .info-card:nth-child(4) { border-top: 3px solid #c0503a; }
-        .info-card:nth-child(5) { border-top: 3px solid #9a6ab0; }
-        .info-card:nth-child(6) { border-top: 3px solid #4a9e9a; }
-        .info-card:nth-child(7) { border-top: 3px solid #d47030; }
-        .info-card:nth-child(8) { border-top: 3px solid #7a6ab0; }
-        .info-card:nth-child(9) { border-top: 3px solid #c05870; }
-
         .info-item {
-            padding: 7px 0;
+            padding: 6px 0;
             border-bottom: 1px solid var(--border);
         }
         .info-item:last-child { border-bottom: none; padding-bottom: 0; }
 
         .info-label {
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -206,397 +204,691 @@
             font-weight: 500;
             word-break: break-word;
         }
+        .info-value.empty { color: var(--text-muted); font-style: italic; }
 
-        /* ── Status badges ── */
-        .status-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.72rem;
-            font-weight: 700;
+        /* ── File list ── */
+        .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+
+        .file-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            background: var(--accent-soft);
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            transition: background 0.15s;
+            word-break: break-all;
         }
-        .status-approved { background: #e6f4ea; color: #276336; }
-        .status-draft     { background: #fdf0e0; color: #7c4a1e; }
+        .file-link:hover { background: var(--border); }
+
+        .session-block {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 9px;
+            background: rgba(255,255,255,0.32);
+            margin-top: 8px;
+        }
+        .session-title {
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .upload-attach-form {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .upload-attach-form label {
+            font-size: 0.62rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .upload-attach-form input,
+        .upload-attach-form select,
+        .upload-attach-form textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--surface);
+            color: var(--text);
+            font: inherit;
+            font-size: 0.8rem;
+            padding: 8px;
+        }
+        .upload-attach-form textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+        .upload-controls {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        /* ── Contract action link ── */
+        .contract-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            background: var(--ok-bg);
+            color: var(--ok);
+            text-decoration: none;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border: 1px solid #b7dfbf;
+            transition: background 0.15s;
+        }
+        .contract-link:hover { background: #c8ecd0; }
 
         /* ── Footer ── */
         .footer {
-            background: var(--footer-bg);
+            background: var(--surface);
             padding: 14px 28px;
             display: flex;
-            gap: 24px;
+            gap: 20px;
             flex-wrap: wrap;
             border-top: 1px solid var(--border);
             align-items: flex-start;
-            position: sticky;
+            position: fixed;
             bottom: 0;
+            left: 0;
+            right: 0;
             z-index: 50;
             box-shadow: 0 -4px 20px var(--shadow);
         }
+        body.dim .footer { background: var(--surface); }
 
-        .footer-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
+        .footer-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-        .footer-group-title {
-            font-size: 0.68rem;
+        .footer-label {
+            font-size: 0.65rem;
             color: var(--text-muted);
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            margin-right: 2px;
             white-space: nowrap;
             align-self: center;
         }
 
-        /* ── Buttons ── */
+        /* ── Buttons (matches index.html exactly) ── */
         .btn {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             padding: 8px 16px;
-            border: none;
             border-radius: 7px;
-            font-size: 0.78rem;
+            font-size: 13px;
             font-weight: 600;
-            cursor: pointer;
             text-decoration: none;
-            transition: background 0.16s, box-shadow 0.16s, transform 0.12s;
+            cursor: pointer;
+            border: none;
+            transition: background 0.18s, box-shadow 0.18s, transform 0.12s;
             white-space: nowrap;
-            letter-spacing: 0.15px;
         }
-        .btn:hover { transform: translateY(-1px); }
+        .btn:hover  { transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
         .btn:active { transform: translateY(0); }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--primary-dk));
-            color: #fff;
-            box-shadow: 0 2px 6px var(--shadow);
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dk));
-            box-shadow: 0 4px 14px var(--shadow);
-        }
+        .btn-primary   { background: var(--primary);    color: #fff; }
+        .btn-primary:hover { background: var(--primary-dk); }
 
-        .btn-secondary {
-            background: var(--accent-soft);
-            color: var(--primary);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover {
-            background: var(--border);
-            box-shadow: 0 2px 8px var(--shadow);
-        }
+        .btn-secondary { background: var(--card); color: var(--primary); border: 1.5px solid var(--border); }
+        .btn-secondary:hover { background: var(--accent-soft); }
 
-        /* ── Scrollbar ── */
-        .content::-webkit-scrollbar { width: 7px; }
-        .content::-webkit-scrollbar-track { background: transparent; }
-        .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-        .content::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        .btn-accent    { background: var(--accent);     color: #fff; }
+        .btn-accent:hover { background: var(--primary); }
+
+        .btn-delete    { background: var(--danger);     color: #fff; }
+        .btn-delete:hover { background: var(--danger-dk); }
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
-            .header { flex-direction: column; text-align: center; padding: 12px 18px; }
-            .content { padding: 16px 14px; }
+            .header { flex-direction: column; align-items: flex-start; padding: 12px 18px; }
+            .content { padding: 16px 14px 120px; }
             .footer  { padding: 12px 14px; gap: 12px; }
         }
         @media (max-width: 600px) {
             .content { grid-template-columns: 1fr; }
-            .footer  { flex-direction: column; }
+            .footer  { flex-direction: column; position: static; }
             .btn     { width: 100%; justify-content: center; }
+        }
+
+        /* ── Refined review layout ── */
+        :root {
+            --bg: #f4f7fb;
+            --surface: #ffffff;
+            --card: #ffffff;
+            --border: #d8e0ea;
+            --primary: #194b5f;
+            --primary-dk: #123746;
+            --accent: #2d7d7a;
+            --accent-soft: #e8f4f3;
+            --text: #1f2933;
+            --text-muted: #66788a;
+            --shadow: rgba(31, 41, 51, 0.10);
+            --danger: #b42318;
+            --danger-dk: #8f1d14;
+            --danger-soft: #fee4e2;
+            --ok: #18794e;
+            --ok-bg: #e8f6ef;
+            --warn: #9a6700;
+            --warn-bg: #fff3c4;
+        }
+
+        body.dim {
+            --bg: #172026;
+            --surface: #1f2a32;
+            --card: #24313a;
+            --border: #3b4b56;
+            --primary: #7ed0ca;
+            --primary-dk: #9ddfd9;
+            --accent: #f2b84b;
+            --accent-soft: #263f43;
+            --text: #edf4f7;
+            --text-muted: #a8bac3;
+            --shadow: rgba(0, 0, 0, 0.32);
+            filter: none;
+        }
+
+        .header {
+            background: var(--surface);
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 1px 16px var(--shadow);
+            padding: 14px 28px;
+        }
+
+        .header h1 a { color: var(--text); }
+        .header h1 { font-size: 1.05rem; letter-spacing: 0; }
+        .header-right { gap: 8px; }
+
+        .emp-id,
+        .dim-toggle {
+            background: var(--accent-soft);
+            border-color: transparent;
+            color: var(--primary);
+            border-radius: 7px;
+        }
+
+        .record-summary {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) repeat(4, minmax(120px, auto));
+            gap: 14px;
+            align-items: end;
+            padding: 22px 28px 18px;
+            background: linear-gradient(180deg, var(--surface), var(--bg));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .record-title {
+            min-width: 0;
+        }
+
+        .record-title .eyebrow,
+        .summary-item span {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .record-title h2 {
+            color: var(--text);
+            font-size: 1.45rem;
+            line-height: 1.15;
+            letter-spacing: 0;
+            font-weight: 750;
+            word-break: break-word;
+        }
+
+        .summary-item {
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+        }
+
+        .summary-item strong {
+            display: block;
+            color: var(--text);
+            font-size: 0.88rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .content {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+            padding: 18px 28px 96px;
+        }
+
+        .info-card {
+            grid-column: span 4;
+            border-radius: 8px;
+            padding: 15px 16px;
+            box-shadow: none;
+            border-top: 1px solid var(--border) !important;
+        }
+
+        .info-card:hover {
+            transform: none;
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .info-card:nth-child(7),
+        .info-card:nth-child(8) {
+            grid-column: span 6;
+        }
+
+        .info-card h3 {
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 0.06em;
+            font-size: 0.72rem;
+            padding-bottom: 9px;
+        }
+
+        .info-item {
+            display: grid;
+            grid-template-columns: minmax(110px, 38%) minmax(0, 1fr);
+            gap: 12px;
+            align-items: baseline;
+            padding: 7px 0;
+        }
+
+        .info-label { margin: 0; }
+        .info-value { font-size: 0.86rem; line-height: 1.35; }
+
+        .file-link,
+        .contract-link {
+            border-radius: 7px;
+            background: var(--accent-soft);
+            color: var(--primary);
+        }
+
+        .footer {
+            position: sticky;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 12px 28px;
+        }
+
+        body.dim .footer { background: rgba(31, 42, 50, 0.94); }
+
+        .btn {
+            border-radius: 7px;
+            padding: 8px 13px;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary { background: var(--primary); }
+        .btn-accent { background: var(--accent); }
+
+        @media (max-width: 1180px) {
+            .record-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .record-title { grid-column: 1 / -1; }
+            .info-card,
+            .info-card:nth-child(7),
+            .info-card:nth-child(8) { grid-column: span 6; }
+        }
+
+        @media (max-width: 720px) {
+            .header,
+            .record-summary,
+            .content,
+            .footer { padding-left: 14px; padding-right: 14px; }
+            .record-summary { grid-template-columns: 1fr; }
+            .content { grid-template-columns: 1fr; padding-bottom: 18px; }
+            .info-card,
+            .info-card:nth-child(7),
+            .info-card:nth-child(8) { grid-column: auto; }
+            .info-item { grid-template-columns: 1fr; gap: 2px; }
+            .footer { position: static; }
         }
     </style>
 </head>
+
+{# ── Jinja macro: one row in an info card ── #}
+{% macro row(label, value, empty='—') %}
+<div class="info-item">
+    <div class="info-label">{{ label }}</div>
+    {% if value %}
+    <div class="info-value">{{ value }}</div>
+    {% else %}
+    <div class="info-value empty">{{ empty }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# ── Date helper: format date strings ── #}
+{% macro fmt_date(value) %}{{ value if value else '' }}{% endmacro %}
+{% macro fmt_dt(dt) %}{{ dt.strftime('%d.%m.%Y %H:%M') if dt else '' }}{% endmacro %}
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1><a href="/" class="title-link">📋 Employee Record Review</a></h1>
-            {% if approval_error %}
-                <div style="background-color: #fee2e2; color: #991b1b; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-                    <strong>Approval failed:</strong> {{ approval_error }}
-                </div>
-            {% endif %}
-            {% if approval_success %}
-                <div style="background-color: #dcfce7; color: #166534; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-                    <strong>Success:</strong> Employee approved successfully.
-                </div>
-            {% endif %}
-            <div class="header-right">
-                <button class="dim-toggle" onclick="document.body.classList.toggle('dim');this.textContent=document.body.classList.contains('dim')?'☀ Bright':'🌙 Dim'">🌙 Dim</button>
-                <div class="emp-id">ID: <strong>{{ employee.id }}</strong></div>
-            </div>
+<div class="container">
+
+    <!-- ── Header ── -->
+    <div class="header">
+        <div>
+            <h1><a href="/">📋 Employee Review</a></h1>
         </div>
 
-        <div class="content">
-            <!-- Personal Information -->
-            <div class="info-card">
-                <h3>Personal Information</h3>
-                <div class="info-item">
-                    <div class="info-label">First Name</div>
-                    <div class="info-value">{{ employee.first_name or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Last Name</div>
-                    <div class="info-value">{{ employee.last_name or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Gender</div>
-                    <div class="info-value">{{ employee.gender or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Date of Birth</div>
-                    <div class="info-value">{{ employee.date_of_birth or '—' }}</div>
-                </div>
-            </div>
+        {% if approval_error %}
+        <div class="alert alert-error">⚠ {{ approval_error }}</div>
+        {% endif %}
+        {% if approval_success %}
+        <div class="alert alert-success">✔ Employee approved successfully.</div>
+        {% endif %}
 
-            <!-- Contact & Location -->
-            <div class="info-card">
-                <h3>Contact & Location</h3>
-                <div class="info-item">
-                    <div class="info-label">Phone</div>
-                    <div class="info-value">{{ employee.phone or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Email</div>
-                    <div class="info-value">{{ employee.email or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Street & House No.</div>
-                    <div class="info-value">{{ employee.street_and_house_number or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">City</div>
-                    <div class="info-value">{{ employee.city or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">ZIP Code</div>
-                    <div class="info-value">{{ employee.zip_code or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Country</div>
-                    <div class="info-value">{{ employee.country or 'Deutschland' }}</div>
-                </div>
-            </div>
-
-            <!-- Birth & Origin -->
-            <div class="info-card">
-                <h3>Birth & Origin</h3>
-                <div class="info-item">
-                    <div class="info-label">Place of Birth</div>
-                    <div class="info-value">{{ employee.place_of_birth or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Country of Birth</div>
-                    <div class="info-value">{{ employee.country_of_birth or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Nationality</div>
-                    <div class="info-value">{{ employee.nationality or '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Identity Documents -->
-            <div class="info-card">
-                <h3>Identity Documents</h3>
-                <div class="info-item">
-                    <div class="info-label">Ausweis Number</div>
-                    <div class="info-value">{{ employee.ausweis_number or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Ausweis Expiry</div>
-                    <div class="info-value">{{ employee.ausweis_expiry_date or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Reisepass Number</div>
-                    <div class="info-value">{{ employee.reise_pass_number or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Reisepass Expiry</div>
-                    <div class="info-value">{{ employee.reise_pass_expiry_date or '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Insurance & Tax -->
-            <div class="info-card">
-                <h3>Insurance & Tax</h3>
-                <div class="info-item">
-                    <div class="info-label">Krankenkasse</div>
-                    <div class="info-value">{{ employee.krankenkasse or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Krankenkasse Nr.</div>
-                    <div class="info-value">{{ employee.krankenkasse_nummer or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Steuer ID</div>
-                    <div class="info-value">{{ employee.steuer_id or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Steuerklasse</div>
-                    <div class="info-value">{{ employee.steuerklasse or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Sozialversicherungsnummer</div>
-                    <div class="info-value">{{ employee.sozialversicherungsnummer or '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Banking -->
-            <div class="info-card">
-                <h3>Banking Information</h3>
-                <div class="info-item">
-                    <div class="info-label">Bank Name</div>
-                    <div class="info-value">{{ employee.bank_name or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">BIC</div>
-                    <div class="info-value">{{ employee.bank_bic or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Account Holder</div>
-                    <div class="info-value">{{ employee.bank_account_holder or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">IBAN</div>
-                    <div class="info-value">{{ employee.bank_iban or '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Employment Details -->
-            <div class="info-card">
-                <h3>Employment Details</h3>
-                <div class="info-item">
-                    <div class="info-label">City of Work</div>
-                    <div class="info-value">{{ employee.work_city or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Hotel Name</div>
-                    <div class="info-value">{{ employee.hotel_name or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Occupation</div>
-                    <div class="info-value">{{ employee.occupation or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Employment Type</div>
-                    <div class="info-value">{{ employee.employment_type or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Start Date</div>
-                    <div class="info-value">{{ employee.start_date or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">End Date</div>
-                    <div class="info-value">{{ employee.end_date or 'Ongoing' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Contract Type</div>
-                    <div class="info-value">{{ employee.contract_type or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Weekly Hours</div>
-                    <div class="info-value">{{ employee.weekly_hours or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Department</div>
-                    <div class="info-value">{{ employee.department or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Days per Week</div>
-                    <div class="info-value">{{ employee.work_days_per_week or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Daily Hours</div>
-                    <div class="info-value">{{ employee.daily_hours or '—' }}</div>
-                </div>
-            </div>
-
-            <!-- System Information -->
-            <div class="info-card">
-                <h3>System Information</h3>
-                <div class="info-item">
-                    <div class="info-label">Status</div>
-                    <div class="info-value">{{ employee.status or 'draft' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Approved At</div>
-                    <div class="info-value">{{ employee.approved_at.strftime('%Y-%m-%d %H:%M') if employee.approved_at else 'Not approved yet' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Approved By</div>
-                    <div class="info-value">{{ employee.approved_by or 'Not approved yet' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Ordio ID</div>
-                    <div class="info-value">{{ employee.ordio_id or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Created At</div>
-                    <div class="info-value">{{ employee.created_at.strftime('%Y-%m-%d %H:%M') if employee.created_at else '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Updated At</div>
-                    <div class="info-value">{{ employee.updated_at.strftime('%Y-%m-%d %H:%M') if employee.updated_at else '—' }}</div>
-                </div>
-            </div>
-
-            <!-- Contract Information -->
-            <div class="info-card">
-                <h3>Contract Information</h3>
-                <div class="info-item">
-                    <div class="info-label">Last Contract Path</div>
-                    <div class="info-value">{{ employee.last_contract_path or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Last Generated</div>
-                    <div class="info-value">{{ employee.last_contract_generated_at.strftime('%Y-%m-%d %H:%M') if employee.last_contract_generated_at else 'Not generated' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Last Contract PDF Path</div>
-                    <div class="info-value">{{ employee.last_contract_pdf_path or '—' }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Last PDF Generated</div>
-                    <div class="info-value">{{ employee.last_contract_pdf_path_generated_at.strftime('%Y-%m-%d %H:%M') if employee.last_contract_pdf_path_generated_at else 'Not generated' }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            <div class="footer-group">
-                <span class="footer-group-title">Record Actions</span>
-                <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit Employee</a>
-                <form action= "/delete-employee/{{employee.id}}" method ='post' style= "display:inline;">
-                    <button
-                        type= "submit"
-                        class= "btn btn-delete"
-                        onclick="return confirm('Are you sure you want to delete this employee: {{employee.first_name}} {{employee.last_name}}?');">
-                        Löschen
-                    </button>
-                </form>
-                <a href="/generate-contract/{{employee.id}}" class="btn btn-primary">📄 Generate Contract</a>
-            </div>
-            <div class="footer-group">
-                <span class="footer-group-title">Downloads</span>
-                <a href="/download-contract/{{ employee.id }}" class="btn btn-secondary">Download Last Contract</a>
-                <a href="/download-contract-pdf/{{ employee.id}}" class="btn btn-secondary">Download Last PDF</a>
-            </div>
-
-            <div class="footer-group">
-                <span class="footer-group-title">Status</span>
-                <a href="/approve-employee/{{ employee.id }}" class="btn btn-primary">Approve Employee</a>
-                <a href="/mark-under-review/{{ employee.id }}" class="btn btn-secondary">Mark Under Review</a>
-                <a href="/reject-employee/{{ employee.id }}" class="btn btn-secondary">Reject Employee</a>
-            </div>
-
-            <div class="footer-group">
-                <span class="footer-group-title">Navigation</span>
-                <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
-                <a href="/upload" class="btn btn-secondary">➕ Create New Employee</a>
-            </div>
+        <div class="header-right">
+            <span class="badge badge-{{ employee.status or 'draft' }}">
+                {{ (employee.status or 'draft') | replace('_', ' ') }}
+            </span>
+            <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
+            <div class="emp-id">ID <strong>{{ employee.id }}</strong></div>
         </div>
     </div>
+
+    <!-- ── Cards grid ── -->
+    <section class="record-summary">
+        <div class="record-title">
+            <span class="eyebrow">Employee Record</span>
+            <h2>{{ (employee.first_name or '') ~ ' ' ~ (employee.last_name or '') }}</h2>
+        </div>
+        <div class="summary-item">
+            <span>Work City</span>
+            <strong>{{ employee.work_city or '—' }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Occupation</span>
+            <strong>{{ employee.occupation or '—' }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Start Date</span>
+            <strong>{{ employee.start_date or '—' }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Contract</span>
+            <strong>{{ employee.contract_type or '—' }}</strong>
+        </div>
+    </section>
+
+    <div class="content">
+
+        <!-- Personal Information -->
+        <div class="info-card">
+            <h3>👤 Personal Information</h3>
+            {{ row('First Name',    employee.first_name) }}
+            {{ row('Middle Name',   employee.middle_name) }}
+            {{ row('Last Name',     employee.last_name) }}
+            {{ row('Gender',        employee.gender) }}
+            {{ row('Date of Birth', employee.date_of_birth) }}
+            {{ row('Marital Status', employee.marital_status) }}
+            {{ row('Disabled',      'Yes' if employee.disabled else ('No' if employee.disabled is not none else None)) }}
+        </div>
+
+        <!-- Contact & Address -->
+        <div class="info-card">
+            <h3>📍 Contact & Address</h3>
+            {{ row('Phone',           employee.phone) }}
+            {{ row('Email',           employee.email) }}
+            {{ row('Street & No.',    employee.street_and_house_number) }}
+            {{ row('ZIP Code',        employee.zip_code) }}
+            {{ row('City',            employee.city) }}
+            {{ row('Country',         employee.country or 'Deutschland') }}
+            {{ row('Emergency Contact', employee.emergency_contact_name) }}
+            {{ row('Emergency Phone',   employee.emergency_contact_phone) }}
+        </div>
+
+        <!-- Birth & Origin -->
+        <div class="info-card">
+            <h3>🌍 Birth & Origin</h3>
+            {{ row('Place of Birth',   employee.place_of_birth) }}
+            {{ row('Country of Birth', employee.country_of_birth) }}
+            {{ row('Nationality',      employee.nationality) }}
+        </div>
+
+        <!-- Identity Documents -->
+        <div class="info-card">
+            <h3>🪪 Identity Documents</h3>
+            {{ row('Ausweis No.',          employee.ausweis_number) }}
+            {{ row('Ausweis Expiry',       employee.ausweis_expiry_date) }}
+            {{ row('Reisepass No.',        employee.reise_pass_number) }}
+            {{ row('Reisepass Expiry',     employee.reise_pass_expiry_date) }}
+            {{ row('Working Permit No.',   employee.working_permit_number) }}
+            {{ row('Working Permit Expiry', employee.working_permit_expiry) }}
+            {{ row('Visa No.',             employee.visa_number) }}
+            {{ row('Visa Expiry',          employee.visa_expiry) }}
+        </div>
+
+        <!-- Insurance & Tax -->
+        <div class="info-card">
+            <h3>🏥 Insurance & Tax</h3>
+            {{ row('Krankenkasse',             employee.krankenkasse) }}
+            {{ row('Krankenkasse Nr.',         employee.krankenkasse_nummer) }}
+            {{ row('Steuer ID',                employee.steuer_id) }}
+            {{ row('Steuerklasse',             employee.steuerklasse) }}
+            {{ row('Sozialversicherungsnr.',   employee.sozialversicherungsnummer) }}
+        </div>
+
+        <!-- Banking -->
+        <div class="info-card">
+            <h3>🏦 Banking</h3>
+            {{ row('Bank Name',       employee.bank_name) }}
+            {{ row('IBAN',            employee.bank_iban) }}
+            {{ row('BIC',             employee.bank_bic) }}
+            {{ row('Account Holder',  employee.bank_account_holder) }}
+        </div>
+
+        <!-- Employment -->
+        <div class="info-card">
+            <h3>💼 Employment</h3>
+            {{ row('City of Work',       employee.work_city) }}
+            {{ row('Hotel / Venue',      employee.hotel_name) }}
+            {{ row('Occupation',         employee.occupation) }}
+            {{ row('Position Level',     employee.position_level) }}
+            {{ row('Department',         employee.department) }}
+            {{ row('Employment Type',    employee.employment_type) }}
+            {{ row('Contract Type',      employee.contract_type) }}
+            {{ row('Start Date',         employee.start_date) }}
+            {{ row('End Date',           employee.end_date, empty='Ongoing') }}
+            {{ row('Probation (months)', employee.probation_period_months) }}
+            {{ row('Weekly Hours',       employee.weekly_hours) }}
+            {{ row('Days / Week',        employee.work_days_per_week) }}
+            {{ row('Daily Hours',        employee.daily_hours) }}
+            {{ row('Previous Employer',  employee.previous_employer) }}
+            {{ row('Education Level',    employee.education_level) }}
+        </div>
+
+        <!-- Uploaded Documents -->
+        <div class="info-card">
+            <h3>📂 Uploaded Documents</h3>
+            {% if employee.collected_docs_docx %}
+            <div class="info-item">
+                <div class="info-label">Document Pack</div>
+                <div class="info-value">
+                    <a class="contract-link" href="/download-collected/{{ employee.id }}">
+                        📄 Download All Documents (Word)
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% if upload_sessions %}
+                {% for session in upload_sessions %}
+                    {% if session.files %}
+                    <div class="session-block">
+                        <div class="session-title">{{ session.name }} - {{ session.modified_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                        <div class="file-list">
+                            {% for file in session.files %}
+                            <a class="file-link" href="/employee-file/{{ employee.id }}/{{ session.route_name }}/{{ file.name }}">
+                                {{ file.name }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+            <div class="info-value empty">No documents saved for this employee yet.</div>
+            {% endif %}
+
+            <form class="upload-attach-form" action="/upload/documents" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                <div>
+                    <label for="employee_files">Attach Documents</label>
+                    <input id="employee_files" type="file" name="files" multiple>
+                </div>
+                <div>
+                    <label for="employee_text_input">Optional Pasted Text</label>
+                    <textarea id="employee_text_input" name="text_input" placeholder="Paste text if no file is available..."></textarea>
+                </div>
+                <div class="upload-controls">
+                    <div>
+                        <label for="employee_ocr_engine">OCR Engine</label>
+                        <select id="employee_ocr_engine" name="ocr_engine">
+                            <option value="rapidocr" selected>RapidOCR (local)</option>
+                            <option value="tesseract">Tesseract (local)</option>
+                            <option value="auto">Auto local fallback</option>
+                            <option value="mistral" {% if not mistral_available %}disabled{% endif %}>Mistral OCR (cloud)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="employee_ai_extractor">AI Extractor</label>
+                        <select id="employee_ai_extractor" name="ai_extractor">
+                            <option value="local" selected>Local - Ollama</option>
+                            <option value="mistral" {% if not mistral_available %}disabled{% endif %}>Mistral (cloud)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Process Documents</button>
+            </form>
+            {% if false %}
+            {% if uploaded_files %}
+            <div class="file-list">
+                {% for file in uploaded_files %}
+                <a class="file-link" href="/employee-file/{{ employee.id }}/{{ file.name }}">
+                    📄 {{ file.name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="info-value empty">No documents yet. Upload files from the
+                <a href="/upload" style="color:var(--primary)">New Employee</a> page.
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Contract -->
+        <div class="info-card">
+            <h3>📄 Contract</h3>
+            <div class="info-item">
+                <div class="info-label">Last Generated</div>
+                <div class="info-value">
+                    {% if employee.last_contract_generated_at %}
+                    {{ employee.last_contract_generated_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% if employee.last_contract_path %}
+                    &nbsp;
+                    <a class="contract-link" href="/download-contract/{{ employee.id }}">⬇ DOCX</a>
+                    {% endif %}
+                    {% if employee.last_contract_pdf_path %}
+                    <a class="contract-link" href="/download-contract-pdf/{{ employee.id }}">⬇ PDF</a>
+                    {% endif %}
+                    {% else %}
+                    <span class="empty">Not generated yet</span>
+                    {% endif %}
+                </div>
+            </div>
+            {{ row('Ordio ID', employee.ordio_id) }}
+        </div>
+
+        <!-- System -->
+        <div class="info-card">
+            <h3>⚙ System</h3>
+            <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                    <span class="badge badge-{{ employee.status or 'draft' }}">
+                        {{ (employee.status or 'draft') | replace('_', ' ') }}
+                    </span>
+                </div>
+            </div>
+            {{ row('Created At',  employee.created_at.strftime('%d.%m.%Y %H:%M') if employee.created_at else None) }}
+            {{ row('Updated At',  employee.updated_at.strftime('%d.%m.%Y %H:%M') if employee.updated_at else None) }}
+            {{ row('Approved At', employee.approved_at.strftime('%d.%m.%Y %H:%M') if employee.approved_at else None) }}
+            {{ row('Approved By', employee.approved_by) }}
+        </div>
+
+    </div><!-- /.content -->
+
+    <!-- ── Footer action bar ── -->
+    <div class="footer">
+
+        <div class="footer-group">
+            <span class="footer-label">Record</span>
+            <a href="/review/{{ employee.id }}/edit" class="btn btn-primary">✏️ Edit</a>
+            <a href="/generate-contract/{{ employee.id }}" class="btn btn-accent">📄 Generate Contract</a>
+            <form action="/delete-employee/{{ employee.id }}" method="post" style="display:inline;"
+                  onsubmit="return confirm('Delete {{ employee.first_name or '' }} {{ employee.last_name or '' }}? This cannot be undone.');">
+                <button type="submit" class="btn btn-delete">🗑 Delete</button>
+            </form>
+        </div>
+
+        <div class="footer-group">
+            <span class="footer-label">Status</span>
+            {% if employee.status != 'approved' %}
+            <a href="/approve-employee/{{ employee.id }}" class="btn btn-primary">✔ Approve</a>
+            {% endif %}
+            {% if employee.status != 'under_review' %}
+            <a href="/mark-under-review/{{ employee.id }}" class="btn btn-secondary">🔍 Under Review</a>
+            {% endif %}
+            {% if employee.status != 'rejected' %}
+            <a href="/reject-employee/{{ employee.id }}" class="btn btn-delete">✖ Reject</a>
+            {% endif %}
+        </div>
+
+        <div class="footer-group">
+            <span class="footer-label">Navigate</span>
+            <a href="/" class="btn btn-secondary">← Dashboard</a>
+            <a href="/upload" class="btn btn-secondary">➕ New Employee</a>
+        </div>
+
+    </div>
+
+</div><!-- /.container -->
+
+<script>
+    function applyDim(on) {
+        document.body.classList.toggle('dim', on);
+        const btn = document.getElementById('dimToggle');
+        if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+    }
+    function toggleDim() {
+        const next = !document.body.classList.contains('dim');
+        localStorage.setItem('dimMode', next ? '1' : '0');
+        applyDim(next);
+    }
+    applyDim(localStorage.getItem('dimMode') === '1');
+</script>
 </body>
 </html>

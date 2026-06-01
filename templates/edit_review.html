@@ -221,16 +221,361 @@
             background: var(--color-primary-accent);
             border-radius: 4px;
         }
+
+        /* ── Dim mode ── */
+        body.dim { filter: brightness(0.72) sepia(0.12); }
+
+        .dim-toggle {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #fff;
+            border-radius: 20px;
+            padding: 5px 13px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s;
+            white-space: nowrap;
+        }
+        .dim-toggle:hover { background: rgba(255,255,255,0.25); }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ── Refined edit layout ── */
+        :root {
+            --color-primary: #194b5f;
+            --color-primary-light: #2d7d7a;
+            --color-primary-accent: #f2b84b;
+            --color-bg: #f4f7fb;
+            --color-card: #ffffff;
+            --color-text: #1f2933;
+            --color-text-light: #66788a;
+            --color-border: #d8e0ea;
+            --focus-ring: rgba(45, 125, 122, 0.16);
+            --shadow-soft: rgba(31, 41, 51, 0.10);
+            --danger: #b42318;
+        }
+
+        body {
+            padding: 0;
+            background: var(--color-bg);
+            min-height: 100vh;
+        }
+
+        body.dim {
+            --color-bg: #172026;
+            --color-card: #24313a;
+            --color-text: #edf4f7;
+            --color-text-light: #a8bac3;
+            --color-border: #3b4b56;
+            --shadow-soft: rgba(0, 0, 0, 0.32);
+            filter: none;
+        }
+
+        .container {
+            max-width: none;
+            min-height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+            background: var(--color-bg);
+            overflow: visible;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+            color: var(--color-text);
+            padding: 14px 28px;
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 1px 16px var(--shadow-soft);
+        }
+
+        body.dim .header {
+            background: rgba(31, 42, 50, 0.94);
+        }
+
+        .header h1 {
+            color: var(--color-text);
+            font-size: 1.05rem;
+            letter-spacing: 0;
+            font-weight: 750;
+        }
+
+        .title-link { color: var(--color-text); }
+
+        .dim-toggle {
+            background: #e8f4f3;
+            color: var(--color-primary);
+            border: 1px solid transparent;
+            border-radius: 7px;
+        }
+
+        body.dim .dim-toggle {
+            background: #263f43;
+            color: #7ed0ca;
+        }
+
+        .content {
+            max-height: none;
+            overflow: visible;
+            padding: 18px 28px 96px;
+        }
+
+        .employee-edit-form {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 14px;
+            align-items: start;
+        }
+
+        .form-section {
+            grid-column: span 6;
+            margin: 0;
+            background: var(--color-card);
+            border: 1px solid var(--color-border);
+            border-left: 4px solid var(--color-primary-light);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: none;
+        }
+
+        .form-section:nth-of-type(4),
+        .form-section:nth-of-type(7) {
+            grid-column: 1 / -1;
+        }
+
+        .form-section h3 {
+            color: var(--color-text);
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 9px;
+            margin-bottom: 12px;
+            font-size: 0.76rem;
+            letter-spacing: 0.07em;
+        }
+
+        .fields-row,
+        .form-section:nth-of-type(7) .fields-row {
+            display: grid;
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .field {
+            grid-column: span 3;
+            min-width: 0;
+            gap: 5px;
+        }
+
+        .field.full-width { grid-column: 1 / -1; }
+
+        .form-section:nth-of-type(4) .field,
+        .form-section:nth-of-type(7) .field {
+            grid-column: span 3;
+        }
+
+        label {
+            color: var(--color-text-light);
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            min-height: 36px;
+            padding: 7px 9px;
+            border-radius: 7px;
+            border: 1px solid var(--color-border);
+            background: var(--color-card);
+            color: var(--color-text);
+            font-size: 0.86rem;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        input[readonly],
+        input:disabled,
+        select:disabled {
+            background: #edf2f7;
+            color: var(--color-text-light);
+        }
+
+        body.dim input[readonly],
+        body.dim input:disabled,
+        body.dim select:disabled {
+            background: #1c2730;
+        }
+
+        .form-actions {
+            position: sticky;
+            bottom: 0;
+            z-index: 18;
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 0 0;
+            background: linear-gradient(180deg, transparent, var(--color-bg) 28%);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border-radius: 7px;
+            border: 1px solid var(--color-border);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button[type="submit"],
+        .btn-primary {
+            margin: 0;
+            background: var(--color-primary);
+            color: #ffffff;
+            border-color: var(--color-primary);
+            text-transform: none;
+            letter-spacing: 0;
+            box-shadow: none;
+        }
+
+        button[type="submit"]:hover,
+        .btn-primary:hover {
+            transform: none;
+            background: #123746;
+            box-shadow: 0 6px 18px var(--shadow-soft);
+        }
+
+        .btn-secondary {
+            background: var(--color-card);
+            color: var(--color-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e8f4f3;
+        }
+
+        @media (max-width: 1120px) {
+            .form-section,
+            .form-section:nth-of-type(4),
+            .form-section:nth-of-type(7) { grid-column: 1 / -1; }
+            .field,
+            .form-section:nth-of-type(4) .field,
+            .form-section:nth-of-type(7) .field { grid-column: span 4; }
+        }
+
+        .upload-panel {
+            margin-bottom: 12px;
+            background: var(--color-card);
+            border-left: 4px solid var(--color-primary-accent);
+            border-radius: 6px;
+            padding: 0.75rem;
+        }
+        .upload-panel h3 {
+            color: var(--color-primary);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.65rem;
+        }
+        .upload-form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+        .upload-form-grid .wide { grid-column: span 4; }
+        textarea {
+            min-height: 74px;
+            resize: vertical;
+            padding: 0.45rem 0.6rem;
+            border: 1px solid var(--color-border);
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 760px) {
+            .header,
+            .content { padding-left: 14px; padding-right: 14px; }
+            .employee-edit-form { grid-template-columns: 1fr; }
+            .upload-form-grid { grid-template-columns: 1fr; }
+            .upload-form-grid .wide { grid-column: auto; }
+            .fields-row,
+            .form-section:nth-of-type(7) .fields-row { grid-template-columns: 1fr; }
+            .field,
+            .form-section:nth-of-type(4) .field,
+            .form-section:nth-of-type(7) .field { grid-column: auto; }
+            .form-actions {
+                position: static;
+                flex-direction: column-reverse;
+            }
+            .btn,
+            button[type="submit"] { width: 100%; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><a href="/" class="title-link">Edit Employee Record</a></h1>
-
+            <div class="header-row">
+                <h1><a href="/" class="title-link">✏️ Edit Employee Record</a></h1>
+                <button class="dim-toggle" id="dimToggle" onclick="toggleDim()">🌙 Dim</button>
+            </div>
         </div>
         <div class="content">
-            <form action="/review/{{ employee.id }}" method="post">
+            <div class="upload-panel">
+                <h3>Attach Documents</h3>
+                <form action="/upload/documents" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="employee_id" value="{{ employee.id }}">
+                    <div class="upload-form-grid">
+                        <div class="field wide">
+                            <label>Upload Documents</label>
+                            <input type="file" name="files" multiple>
+                        </div>
+                        <div class="field wide">
+                            <label>Optional Pasted Text</label>
+                            <textarea name="text_input" placeholder="Paste text if no file is available..."></textarea>
+                        </div>
+                        <div class="field">
+                            <label>OCR Engine</label>
+                            <select name="ocr_engine">
+                                <option value="rapidocr" selected>RapidOCR (local)</option>
+                                <option value="tesseract">Tesseract (local)</option>
+                                <option value="auto">Auto local fallback</option>
+                                <option value="mistral" {% if not mistral_available %}disabled{% endif %}>Mistral OCR (cloud)</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>AI Extractor</label>
+                            <select name="ai_extractor">
+                                <option value="local" selected>Local - Ollama</option>
+                                <option value="mistral" {% if not mistral_available %}disabled{% endif %}>Mistral (cloud)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit">Process Documents</button>
+                </form>
+            </div>
+
+            <form class="employee-edit-form" action="/review/{{ employee.id }}" method="post">
 
                 <!-- Personal Information -->
                 <div class="form-section">
@@ -372,7 +717,10 @@
                     </div>
                 </div>
 
-                <button type="submit">Save Changes</button>
+                <div class="form-actions">
+                    <a class="btn btn-secondary" href="/review/{{ employee.id }}">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
             </form>
         </div>
     </div>
@@ -853,6 +1201,19 @@
                 wh.style.opacity = '0.75'; dpw.style.opacity = '0.75'; dh.style.opacity = '0.75';
             }
         })();
+    </script>
+    <script>
+        function applyDim(on) {
+            document.body.classList.toggle('dim', on);
+            const btn = document.getElementById('dimToggle');
+            if (btn) btn.textContent = on ? '☀ Bright' : '🌙 Dim';
+        }
+        function toggleDim() {
+            const next = !document.body.classList.contains('dim');
+            localStorage.setItem('dimMode', next ? '1' : '0');
+            applyDim(next);
+        }
+        applyDim(localStorage.getItem('dimMode') === '1');
     </script>
 </body>
 </html>

@@ -1,10 +1,14 @@
-# ai/extractor.py
+"""ai/extractor.py — LLM-based field extraction from OCR text."""
 
 import json
+import logging
 import re
+
 import requests
 
 from config import OLLAMA_BASE_URL, LOCAL_TEXT_MODEL
+
+logger = logging.getLogger(__name__)
 
 
 EXTRACTION_SCHEMA_DESCRIPTION = """
@@ -574,49 +578,142 @@ class LocalOllamaExtractor:
         text = re.sub(r"�+", "", text)
         return text
 
+    @staticmethod
+    def _parse_llm_response(raw: str) -> dict:
+        """
+        Parse a JSON dict from the model's raw response string.
+
+        Handles two common failure modes:
+        - Model wraps JSON in markdown fences (```json ... ```)
+        - Model returns prose with an embedded JSON block
+        Returns {} on complete parse failure so the pipeline continues gracefully.
+        """
+        text = raw.strip()
+
+        # Strip markdown code fences if present
+        fence_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text)
+        if fence_match:
+            text = fence_match.group(1)
+
+        # Try to extract the first {...} block if the response contains prose
+        if not text.startswith("{"):
+            brace_match = re.search(r"\{[\s\S]*\}", text)
+            text = brace_match.group(0) if brace_match else text
+
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as exc:
+            logger.warning("LLM returned invalid JSON (%s) — extraction skipped", exc)
+            return {}
+
     def extract_from_text(self, raw_text: str, source_description: str = "") -> dict:
         raw_text = self._fix_ocr_text(raw_text)
-        prompt = f"""
-You are a multilingual employee document extraction system.
-
-Document context: {source_description}
-
-Task:
-Extract employee information from the document text below.
-Follow the schema and field mapping rules exactly.
-Only extract fields that are clearly visible in THIS document.
-If a field is not clearly present in the text, use null -- never guess or invent values.
-
-Document language may be German, Polish, English, Russian, Turkish, Hungarian or other.
-
-{EXTRACTION_SCHEMA_DESCRIPTION}
-
-Document text:
-{raw_text[:4000]}
-"""
+        prompt = (
+            "You are a multilingual employee document extraction system.\n\n"
+            f"Document context: {source_description}\n\n"
+            "Task:\n"
+            "Extract employee information from the document text below.\n"
+            "Follow the schema and field mapping rules exactly.\n"
+            "Only extract fields that are clearly visible in THIS document.\n"
+            "If a field is not clearly present in the text, use null -- never guess or invent values.\n\n"
+            "Document language may be German, Polish, English, Russian, Turkish, Hungarian or other.\n\n"
+            f"{EXTRACTION_SCHEMA_DESCRIPTION}\n\n"
+            f"Document text:\n{raw_text[:4000]}"
+        )
 
         response = requests.post(
             f"{OLLAMA_BASE_URL}/api/generate",
-            json={
-                "model": self.model_name,
-                "prompt": prompt,
-                "stream": False,
-                "format": "json",
-            },
-            timeout=180,
+            json={"model": self.model_name, "prompt": prompt, "stream": False, "format": "json"},
+            timeout=None,
         )
         response.raise_for_status()
 
-        result = response.json()
-        text = result.get("response", "").strip()
+        raw_response = response.json().get("response", "").strip()
+        extracted = self._parse_llm_response(raw_response)
+        if not extracted:
+            return {}
 
-        extracted = json.loads(text)
+        extracted = _apply_text_based_overrides(extracted, raw_text)
+        extracted = _normalize_extracted(extracted)
+        return extracted
+
+
+class MistralAIExtractor:
+    """
+    AI field extractor using Mistral's cloud chat completions API.
+
+    Produces the same structured output schema as LocalOllamaExtractor and reuses
+    all the same post-processing helpers (_fix_ocr_text, _parse_llm_response,
+    _apply_text_based_overrides, _normalize_extracted).
+
+    Requires MISTRAL_API_KEY to be set in the environment.
+    Model is controlled by MISTRAL_EXTRACT_MODEL (default: mistral-small-latest).
+    """
+
+    _API_URL = "https://api.mistral.ai/v1/chat/completions"
+
+    def __init__(self, model_name: str | None = None):
+        from config import MISTRAL_API_KEY, MISTRAL_EXTRACT_MODEL  # lazy import — avoids circular at module load
+        if not MISTRAL_API_KEY:
+            raise RuntimeError(
+                "MISTRAL_API_KEY is not set. "
+                "Add it to .env.local to use the Mistral AI extractor."
+            )
+        self._api_key   = MISTRAL_API_KEY
+        self.model_name = model_name or MISTRAL_EXTRACT_MODEL
+
+    def extract_from_text(self, raw_text: str, source_description: str = "") -> dict:
+        raw_text = LocalOllamaExtractor._fix_ocr_text(raw_text)
+
+        prompt = (
+            "You are a multilingual employee document extraction system.\n\n"
+            f"Document context: {source_description}\n\n"
+            "Task:\n"
+            "Extract employee information from the document text below.\n"
+            "Follow the schema and field mapping rules exactly.\n"
+            "Only extract fields that are clearly visible in THIS document.\n"
+            "If a field is not clearly present in the text, use null -- never guess or invent values.\n\n"
+            "Document language may be German, Polish, English, Russian, Turkish, Hungarian or other.\n\n"
+            f"{EXTRACTION_SCHEMA_DESCRIPTION}\n\n"
+            f"Document text:\n{raw_text[:4000]}"
+        )
+
+        response = requests.post(
+            self._API_URL,
+            headers={
+                "Authorization": f"Bearer {self._api_key}",
+                "Content-Type":  "application/json",
+            },
+            json={
+                "model":           self.model_name,
+                "messages":        [{"role": "user", "content": prompt}],
+                "response_format": {"type": "json_object"},
+                "temperature":     0,
+            },
+            timeout=60,  # cloud API is much faster than local Ollama
+        )
+        response.raise_for_status()
+
+        raw_response = response.json()["choices"][0]["message"]["content"].strip()
+        extracted = LocalOllamaExtractor._parse_llm_response(raw_response)
+        if not extracted:
+            return {}
+
         extracted = _apply_text_based_overrides(extracted, raw_text)
         extracted = _normalize_extracted(extracted)
         return extracted
 
 
 def get_ai_extractor(name: str = "local"):
+    """
+    Factory: return the AI extractor for the given name.
+
+    Supported names:
+      "local" / "ollama"  → LocalOllamaExtractor  (default, uses local Ollama)
+      "mistral"           → MistralAIExtractor     (requires MISTRAL_API_KEY)
+    """
     if name in ("local", "ollama"):
         return LocalOllamaExtractor()
-    raise ValueError(f"Unsupported AI extractor: {name}")
+    if name == "mistral":
+        return MistralAIExtractor()
+    raise ValueError(f"Unsupported AI extractor: {name!r}. Choose 'local' or 'mistral'.")
